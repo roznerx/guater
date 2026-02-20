@@ -70,3 +70,46 @@ export async function clearAllLogs() {
 
   updateTag(`logs-${user.id}`)
 }
+
+export async function addPreset(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const label = formData.get('label') as string
+  const amount_ml = parseInt(formData.get('amount_ml') as string)
+  if (!label || !amount_ml || amount_ml <= 0) return
+
+  const { data: existing } = await supabase
+    .from('quick_presets')
+    .select('sort_order')
+    .eq('user_id', user.id)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const nextOrder = existing && existing.length > 0
+    ? existing[0].sort_order + 1
+    : 0
+
+  await supabase.from('quick_presets').insert({
+    user_id: user.id,
+    label,
+    amount_ml,
+    sort_order: nextOrder,
+  })
+
+  updateTag(`presets-${user.id}`)
+}
+
+export async function deletePreset(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase
+    .from('quick_presets')
+    .delete()
+    .eq('id', id)
+
+  updateTag(`presets-${user.id}`)
+}

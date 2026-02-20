@@ -107,3 +107,18 @@ export async function getStreak(goalMl: number): Promise<number> {
     { tags: [`logs-${user.id}`] }
   )()
 }
+
+export async function getPresets() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .from('quick_presets')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('sort_order', { ascending: true })
+
+  if (error) return []
+  return data
+}

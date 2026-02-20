@@ -1,11 +1,12 @@
-import { getProfile } from '@/lib/water'
+import { getProfile, getPresets } from '@/lib/water'
 import { updateProfile } from '@/app/actions'
 import { Button, Input, Card } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
 import { logout } from '@/app/(auth)/actions'
+import PresetsManager from '@/components/water/PresetsManager'
 
 export default async function SettingsPage() {
-  const profile = await getProfile()
+  const [profile, presets] = await Promise.all([getProfile(), getPresets()])
 
   return (
     <div className="min-h-screen bg-surface">
@@ -39,7 +40,6 @@ export default async function SettingsPage() {
               min={100}
               max={10000}
             />
-
             <div className="flex flex-col gap-1.5">
               <label htmlFor="preferred_unit" className="text-sm font-semibold text-text-secondary">
                 Unit
@@ -54,7 +54,6 @@ export default async function SettingsPage() {
                 <option value="oz">oz</option>
               </select>
             </div>
-
             <div className="flex flex-col gap-1.5">
               <label htmlFor="timezone" className="text-sm font-semibold text-text-secondary">
                 Timezone
@@ -75,14 +74,18 @@ export default async function SettingsPage() {
                 <option value="Europe/Paris">Paris (CET)</option>
               </select>
             </div>
-
             <Button type="submit" variant="primary" fullWidth>
               Save changes
             </Button>
           </form>
         </Card>
 
-        {/* Danger zone */}
+        {/* Containers */}
+        <Card>
+          <PresetsManager presets={presets} />
+        </Card>
+
+        {/* Account */}
         <Card>
           <div className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-4">
             Account

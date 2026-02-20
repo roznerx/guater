@@ -1,10 +1,14 @@
-import { getProfile, getTodayLogs, getStreak } from '@/lib/water'
+import { getProfile, getTodayLogs, getStreak, getPresets } from '@/lib/water'
 import { ProgressRing, ProgressBar, QuickAdd, LogList, StreakBadge } from '@/components/water'
 import { Card } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
 
 export default async function DashboardPage() {
-  const [profile, logs] = await Promise.all([getProfile(), getTodayLogs()])
+  const [profile, logs, presets] = await Promise.all([
+    getProfile(),
+    getTodayLogs(),
+    getPresets(),
+  ])
 
   const goal = profile?.daily_goal_ml ?? 2500
   const consumed = logs.reduce((sum, log) => sum + log.amount_ml, 0)
@@ -32,7 +36,7 @@ export default async function DashboardPage() {
         </Card>
 
         <Card>
-          <QuickAdd />
+          <QuickAdd presets={presets} />
         </Card>
 
         <Card>

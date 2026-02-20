@@ -4,12 +4,29 @@ import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui'
 import { logWater } from '@/app/actions'
 
-const PRESETS = [250, 500, 750]
+interface Preset {
+  id: string
+  label: string
+  amount_ml: number
+}
 
-export default function QuickAdd() {
+interface QuickAddProps {
+  presets: Preset[]
+}
+
+const DEFAULT_PRESETS: Preset[] = [
+  { id: 'default-1', label: '250 ml', amount_ml: 250 },
+  { id: 'default-2', label: '500 ml', amount_ml: 500 },
+]
+
+export default function QuickAdd({ presets }: QuickAddProps) {
   const [showCustom, setShowCustom] = useState(false)
   const [customAmount, setCustomAmount] = useState('')
   const [isPending, startTransition] = useTransition()
+
+  const activePresets = presets.length > 0
+  ? [...presets, ...DEFAULT_PRESETS]
+  : DEFAULT_PRESETS
 
   async function handleLogWater(formData: FormData) {
     startTransition(async () => {
@@ -25,16 +42,16 @@ export default function QuickAdd() {
         Quick add
       </div>
       <div className="flex gap-2 flex-wrap">
-        {PRESETS.map((amount) => (
-          <form key={amount} action={handleLogWater}>
-            <input type="hidden" name="amount" value={amount} />
+        {activePresets.map((preset) => (
+          <form key={preset.id} action={handleLogWater}>
+            <input type="hidden" name="amount" value={preset.amount_ml} />
             <Button
               type="submit"
               variant="secondary"
               disabled={isPending}
               className="disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              + {amount} ml
+              {preset.label}
             </Button>
           </form>
         ))}
