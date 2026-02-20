@@ -32,20 +32,15 @@ export async function getTodayLogs(): Promise<WaterLog[]> {
   const endOfDay = new Date(startOfDay)
   endOfDay.setDate(endOfDay.getDate() + 1)
 
-  return unstable_cache(
-    async () => {
-      const { data, error } = await supabase
-        .from('water_logs')
-        .select('*')
-        .gte('logged_at', startOfDay.toISOString())
-        .lt('logged_at', endOfDay.toISOString())
-        .order('logged_at', { ascending: false })
-      if (error) return []
-      return data as WaterLog[]
-    },
-    [`logs-${user.id}-${startOfDay.toDateString()}`],
-    { tags: [`logs-${user.id}`] }
-  )()
+  const { data, error } = await supabase
+    .from('water_logs')
+    .select('*')
+    .gte('logged_at', startOfDay.toISOString())
+    .lt('logged_at', endOfDay.toISOString())
+    .order('logged_at', { ascending: false })
+
+  if (error) return []
+  return data
 }
 
 export async function getWeeklyLogs(): Promise<WaterLog[]> {
@@ -56,17 +51,59 @@ export async function getWeeklyLogs(): Promise<WaterLog[]> {
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
+  const { data, error } = await supabase
+    .from('water_logs')
+    .select('*')
+    .gte('logged_at', sevenDaysAgo.toISOString())
+    .order('logged_at', { ascending: false })
+
+  if (error) return []
+  return data
+}
+
+export async function getStreak(goalMl: number): Promise<number> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return 0
+
   return unstable_cache(
     async () => {
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
       const { data, error } = await supabase
         .from('water_logs')
-        .select('*')
-        .gte('logged_at', sevenDaysAgo.toISOString())
+        .select('amount_ml, logged_at')
+        .gte('logged_at', thirtyDaysAgo.toISOString())
         .order('logged_at', { ascending: false })
-      if (error) return []
-      return data as WaterLog[]
+
+      if (error || !data) return 0
+
+      const byDay: Record<string, number> = {}
+      for (const log of data) {
+        const day = new Date(log.logged_at).toLocaleDateString('en-CA')
+        byDay[day] = (byDay[day] ?? 0) + log.amount_ml
+      }
+
+      let streak = 0
+      const today = new Date()
+
+      for (let i = 0; i < 30; i++) {
+        const date = new Date(today)
+        date.setDate(date.getDate() - i)
+        const key = date.toLocaleDateString('en-CA')
+
+        if ((byDay[key] ?? 0) >= goalMl) {
+          streak++
+        } else {
+          if (i === 0) continue
+          break
+        }
+      }
+
+      return streak
     },
-    [`weekly-${user.id}`],
+    [`streak-${user.id}`],
     { tags: [`logs-${user.id}`] }
   )()
 }

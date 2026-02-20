@@ -50,3 +50,23 @@ export async function updateProfile(formData: FormData) {
 
   updateTag(`profile-${user.id}`)
 }
+
+export async function clearAllLogs() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const now = new Date()
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const endOfDay = new Date(startOfDay)
+  endOfDay.setDate(endOfDay.getDate() + 1)
+
+  await supabase
+    .from('water_logs')
+    .delete()
+    .eq('user_id', user.id)
+    .gte('logged_at', startOfDay.toISOString())
+    .lt('logged_at', endOfDay.toISOString())
+
+  updateTag(`logs-${user.id}`)
+}

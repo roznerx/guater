@@ -1,0 +1,16 @@
+interface StreakBadgeProps {
+  streak: number
+}
+
+export default function StreakBadge({ streak }: StreakBadgeProps) {
+  if (streak === 0) return null
+
+  return (
+    <div className="inline-flex items-center gap-2 bg-teal-light border-2 border-teal-deep rounded-full px-3 py-1 shadow-[2px_2px_0_#1A7A74]">
+      <div className="w-2 h-2 rounded-full bg-teal-deep" />
+      <span className="text-sm font-semibold text-teal-deep">
+        {streak} day{streak > 1 ? 's' : ''} streak
+      </span>
+    </div>
+  )
+}
