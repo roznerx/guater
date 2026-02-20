@@ -113,3 +113,17 @@ export async function deletePreset(id: string) {
 
   updateTag(`presets-${user.id}`)
 }
+
+export async function editLog(id: string, amount: number) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase
+    .from('water_logs')
+    .update({ amount_ml: amount })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  updateTag(`logs-${user.id}`)
+}
