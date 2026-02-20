@@ -1,5 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display:ital@0;1&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Blues */
+  --color-blue-pale:  #C8DCEE;
+  --color-blue-light: #7FB8D8;
+  --color-blue-mid:   #3E8FC0;
+  --color-blue-core:  #1A6FA0;
+  --color-blue-deep:  #0D4F78;
+
+  /* Teals */
+  --color-teal-light: #8DCFCA;
+  --color-teal-core:  #2AABA2;
+  --color-teal-deep:  #1A7A74;
+
+  /* Neutrals */
+  --color-surface:    #F4F8FB;
+  --color-border:     #DDE8F0;
+  --color-slate-soft: #E8EEF4;
+  --color-slate-mid:  #94A8BA;
+  --color-slate-deep: #4A6070;
+
+  /* Text */
+  --color-text-primary:   #0F2A3A;
+  --color-text-secondary: #4A6070;
+  --color-text-muted:     #94A8BA;
+
+  /* Status */
+  --color-status-success: #2AABA2;
+  --color-status-warning: #E8A230;
+  --color-status-error:   #D95F5F;
+
+  /* Fonts */
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-sans:  'DM Sans', system-ui, sans-serif;
+}
