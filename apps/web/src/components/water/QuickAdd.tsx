@@ -2,7 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui'
+import { ConfirmDialog } from '@/components/ui'
 import { logWater } from '@/app/actions'
+
+const SINGLE_ENTRY_WARNING_THRESHOLD = 1000
 
 interface Preset {
   id: string
@@ -23,12 +26,22 @@ export default function QuickAdd({ presets }: QuickAddProps) {
   const [showCustom, setShowCustom] = useState(false)
   const [customAmount, setCustomAmount] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
+  const [showWarning, setShowWarning] = useState(false)
 
   const activePresets = presets.length > 0
-  ? [...presets, ...DEFAULT_PRESETS]
-  : DEFAULT_PRESETS
+    ? [...presets, ...DEFAULT_PRESETS]
+    : DEFAULT_PRESETS
 
   async function handleLogWater(formData: FormData) {
+    const amount = parseInt(formData.get('amount') as string)
+
+    if (amount >= SINGLE_ENTRY_WARNING_THRESHOLD) {
+      setPendingFormData(formData)
+      setShowWarning(true)
+      return
+    }
+
     startTransition(async () => {
       await logWater(formData)
       setCustomAmount('')
@@ -36,8 +49,30 @@ export default function QuickAdd({ presets }: QuickAddProps) {
     })
   }
 
+  async function handleConfirmWarning() {
+    if (!pendingFormData) return
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    startTransition(async () => {
+      await logWater(pendingFormData)
+      setCustomAmount('')
+      setShowCustom(false)
+      setPendingFormData(null)
+    })
+  }
+
   return (
     <div>
+      <ConfirmDialog
+        isOpen={showWarning}
+        title="Large amount detected"
+        message={`Logging ${pendingFormData ? parseInt(pendingFormData.get('amount') as string).toLocaleString() : ''}ml at once may be unsafe. Drinking more than 1,000ml in a short period can cause hyponatremia. Are you sure?`}
+        onConfirm={handleConfirmWarning}
+        onCancel={() => {
+          setShowWarning(false)
+          setPendingFormData(null)
+        }}
+      />
+
       <div className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">
         Quick add
       </div>

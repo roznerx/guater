@@ -1,5 +1,5 @@
 import { getProfile, getTodayLogs, getStreak, getPresets } from '@/lib/water'
-import { ProgressRing, ProgressBar, QuickAdd, LogList, StreakBadge } from '@/components/water'
+import { WaterBottle, ProgressBar, QuickAdd, LogList, StreakBadge, DailyWarningBanner } from '@/components/water'
 import { Card } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
 
@@ -28,8 +28,10 @@ export default async function DashboardPage() {
 
         {streak > 0 && <StreakBadge streak={streak} />}
 
+        <DailyWarningBanner consumed={consumed} />
+
         <Card>
-          <ProgressRing consumed={consumed} goal={goal} />
+          <WaterBottle consumed={consumed} goal={goal} />
           <div className="mt-4">
             <ProgressBar consumed={consumed} goal={goal} />
           </div>
