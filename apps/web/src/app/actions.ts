@@ -31,3 +31,23 @@ export async function deleteLog(id: string) {
 
   revalidatePath('/')
 }
+
+export async function updateProfile(formData: FormData) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase
+    .from('profiles')
+    .update({
+      display_name: formData.get('display_name') as string,
+      daily_goal_ml: parseInt(formData.get('daily_goal_ml') as string),
+      preferred_unit: formData.get('preferred_unit') as string,
+      timezone: formData.get('timezone') as string,
+    })
+    .eq('id', user.id)
+
+  revalidatePath('/')
+  revalidatePath('/settings')
+}
