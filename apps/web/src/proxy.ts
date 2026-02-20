@@ -28,7 +28,13 @@ export async function proxy(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
-                      request.nextUrl.pathname.startsWith('/signup')
+                    request.nextUrl.pathname.startsWith('/signup') ||
+                    request.nextUrl.pathname.startsWith('/forgot-password') ||
+                    request.nextUrl.pathname.startsWith('/reset-password')
+
+  if (request.nextUrl.pathname.startsWith('/reset-password')) {
+    return supabaseResponse
+  }
 
   if (!session && !isAuthRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
@@ -46,3 +52,4 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
+

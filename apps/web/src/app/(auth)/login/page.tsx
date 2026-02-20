@@ -5,9 +5,9 @@ import { Button, Input } from '@/components/ui'
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; message?: string }>
 }) {
-  const { error } = await searchParams
+  const { error, message } = await searchParams
 
   return (
     <div className="flex flex-col gap-6">
@@ -22,6 +22,12 @@ export default async function LoginPage({
       {error && (
         <div className="border-2 border-status-error bg-white text-status-error text-sm px-4 py-3 rounded-xl">
           {decodeURIComponent(error)}
+        </div>
+      )}
+
+      {message && (
+        <div className="border-2 border-teal-core bg-white text-teal-deep text-sm px-4 py-3 rounded-xl">
+          {decodeURIComponent(message)}
         </div>
       )}
 
@@ -47,12 +53,19 @@ export default async function LoginPage({
         </Button>
       </form>
 
-      <p className="text-sm text-text-muted text-center">
-        Don&apos;t have an account?{' '}
-        <Link href="/signup" className="text-blue-core font-semibold hover:text-blue-deep transition-colors">
-          Sign up
-        </Link>
-      </p>
+      <div className="flex flex-col gap-3 text-center">
+        <p className="text-sm text-text-muted">
+          <Link href="/forgot-password" className="text-blue-core font-semibold hover:text-blue-deep transition-colors">
+            Forgot your password?
+          </Link>
+        </p>
+        <p className="text-sm text-text-muted">
+          Don&apos;t have an account?{' '}
+          <Link href="/signup" className="text-blue-core font-semibold hover:text-blue-deep transition-colors">
+            Sign up
+          </Link>
+        </p>
+      </div>
 
     </div>
   )

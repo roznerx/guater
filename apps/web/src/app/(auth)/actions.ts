@@ -47,3 +47,15 @@ export async function logout() {
   revalidatePath('/', 'layout')
   redirect('/login')
 }
+
+export async function requestPasswordReset(formData: FormData) {
+  const supabase = await createClient()
+  const email = formData.get('email') as string
+  if (!email) return
+
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+  })
+
+  redirect('/forgot-password?message=Check your email for a reset link')
+}
