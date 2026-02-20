@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import type { WaterLog } from '@guater/types'
 import { deleteLog } from '@/app/actions'
 
@@ -10,6 +13,41 @@ function formatTime(iso: string) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+function LogItem({ log }: { log: WaterLog }) {
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    if (deleting) return
+    setDeleting(true)
+    await deleteLog(log.id)
+  }
+
+  return (
+    <div className={`flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border bg-surface transition-opacity ${deleting ? 'opacity-40' : ''}`}>
+      <div className="flex items-center gap-3">
+        <div className="w-7 h-7 rounded-full bg-blue-pale border-2 border-blue-deep flex items-center justify-center text-xs font-bold text-blue-deep flex-shrink-0">
+          💧
+        </div>
+        <span className="font-semibold text-text-primary">
+          {log.amount_ml} ml
+        </span>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="text-xs font-medium text-text-muted">
+          {formatTime(log.logged_at)}
+        </span>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="w-6 h-6 rounded-md border-2 border-border bg-white text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+        >
+          {deleting ? '…' : '✕'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default function LogList({ logs }: LogListProps) {
@@ -28,32 +66,7 @@ export default function LogList({ logs }: LogListProps) {
       </div>
       <div className="flex flex-col gap-2">
         {logs.map((log) => (
-          <div
-            key={log.id}
-            className="flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border bg-surface"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-full bg-blue-pale border-2 border-blue-deep flex items-center justify-center text-xs font-bold text-blue-deep flex-shrink-0">
-                💧
-              </div>
-              <span className="font-semibold text-text-primary">
-                {log.amount_ml} ml
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-text-muted">
-                {formatTime(log.logged_at)}
-              </span>
-              <form action={deleteLog.bind(null, log.id)}>
-                <button
-                  type="submit"
-                  className="w-6 h-6 rounded-md border-2 border-border bg-white text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer"
-                >
-                  ✕
-                </button>
-              </form>
-            </div>
-          </div>
+          <LogItem key={log.id} log={log} />
         ))}
       </div>
     </div>

@@ -1,11 +1,10 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
 export async function logWater(formData: FormData) {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
 
@@ -18,23 +17,24 @@ export async function logWater(formData: FormData) {
     source: 'quick',
   })
 
-  revalidatePath('/')
+  updateTag(`logs-${user.id}`)
 }
 
 export async function deleteLog(id: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
 
   await supabase
     .from('water_logs')
     .delete()
     .eq('id', id)
 
-  revalidatePath('/')
+  updateTag(`logs-${user.id}`)
 }
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
 
@@ -48,6 +48,5 @@ export async function updateProfile(formData: FormData) {
     })
     .eq('id', user.id)
 
-  revalidatePath('/')
-  revalidatePath('/settings')
+  updateTag(`profile-${user.id}`)
 }

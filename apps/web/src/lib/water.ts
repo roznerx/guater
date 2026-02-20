@@ -1,9 +1,29 @@
+import { unstable_cache } from 'next/cache'
 import type { WaterLog } from '@guater/types'
 import { createClient } from '@/lib/supabase/server'
 
+export async function getProfile() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  return unstable_cache(
+    async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      if (error) return null
+      return data
+    },
+    [`profile-${user.id}`],
+    { tags: [`profile-${user.id}`] }
+  )()
+}
+
 export async function getTodayLogs(): Promise<WaterLog[]> {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
@@ -12,48 +32,41 @@ export async function getTodayLogs(): Promise<WaterLog[]> {
   const endOfDay = new Date(startOfDay)
   endOfDay.setDate(endOfDay.getDate() + 1)
 
-  const { data, error } = await supabase
-    .from('water_logs')
-    .select('*')
-    .gte('logged_at', startOfDay.toISOString())
-    .lt('logged_at', endOfDay.toISOString())
-    .order('logged_at', { ascending: false })
-
-  if (error) return []
-  return data
+  return unstable_cache(
+    async () => {
+      const { data, error } = await supabase
+        .from('water_logs')
+        .select('*')
+        .gte('logged_at', startOfDay.toISOString())
+        .lt('logged_at', endOfDay.toISOString())
+        .order('logged_at', { ascending: false })
+      if (error) return []
+      return data as WaterLog[]
+    },
+    [`logs-${user.id}-${startOfDay.toDateString()}`],
+    { tags: [`logs-${user.id}`] }
+  )()
 }
 
-export async function getProfile() {
+export async function getWeeklyLogs(): Promise<WaterLog[]> {
   const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  if (error) return null
-  return data
-}
-
-export async function getWeeklyLogs() {
-  const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-  const { data, error } = await supabase
-    .from('water_logs')
-    .select('*')
-    .gte('logged_at', sevenDaysAgo.toISOString())
-    .order('logged_at', { ascending: false })
-
-  if (error) return []
-  return data
+  return unstable_cache(
+    async () => {
+      const { data, error } = await supabase
+        .from('water_logs')
+        .select('*')
+        .gte('logged_at', sevenDaysAgo.toISOString())
+        .order('logged_at', { ascending: false })
+      if (error) return []
+      return data as WaterLog[]
+    },
+    [`weekly-${user.id}`],
+    { tags: [`logs-${user.id}`] }
+  )()
 }

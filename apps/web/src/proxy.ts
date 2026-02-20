@@ -25,18 +25,16 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
                       request.nextUrl.pathname.startsWith('/signup')
 
-  // Not logged in and trying to access protected route
-  if (!user && !isAuthRoute) {
+  if (!session && !isAuthRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Logged in and trying to access auth routes
-  if (user && isAuthRoute) {
+  if (session && isAuthRoute) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
