@@ -1,6 +1,7 @@
+import type { WaterLog } from '@guater/types'
 import { createClient } from '@/lib/supabase/server'
 
-export async function getTodayLogs() {
+export async function getTodayLogs(): Promise<WaterLog[]> {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()

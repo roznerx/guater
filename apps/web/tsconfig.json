@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@guater/types": ["../../packages/types/src/index.ts"]
     }
   },
   "include": [
