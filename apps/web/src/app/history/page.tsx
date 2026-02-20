@@ -52,12 +52,12 @@ export default async function HistoryPage() {
   })
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface dark:bg-dark-surface">
       <Navbar displayName={profile?.display_name ?? undefined} />
 
       <main className="max-w-lg mx-auto px-6 py-8 flex flex-col gap-6">
 
-        <h2 className="text-xl font-bold text-text-secondary">History</h2>
+        <h2 className="text-xl font-bold text-text-secondary dark:text-dark-text-secondary">History</h2>
 
         {/* Summary stats */}
         <div className="grid grid-cols-3 gap-3">

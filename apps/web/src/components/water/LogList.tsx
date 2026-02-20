@@ -50,9 +50,9 @@ function LogItem({ log }: { log: WaterLog }) {
   }
 
   return (
-    <div className={`flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border bg-surface transition-opacity ${deleting ? 'opacity-40' : ''}`}>
+    <div className={`flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border dark:border-dark-border bg-surface dark:bg-dark-surface transition-opacity ${deleting ? 'opacity-40' : ''}`}>
       <div className="flex items-center gap-3">
-        <div className="w-7 h-7 rounded-full bg-blue-pale border-2 border-blue-deep flex items-center justify-center text-xs font-bold text-blue-deep flex-shrink-0">
+        <div className="w-7 h-7 rounded-full bg-blue-pale dark:bg-dark-card border-2 border-blue-deep flex items-center justify-center text-xs font-bold text-blue-deep dark:text-blue-light flex-shrink-0">
           💧
         </div>
         {editing ? (
@@ -87,7 +87,7 @@ function LogItem({ log }: { log: WaterLog }) {
         ) : (
           <button
             onClick={() => setEditing(true)}
-            className="font-semibold text-text-primary hover:text-blue-core transition-colors cursor-pointer"
+            className="font-semibold text-text-primary dark:text-dark-text-primary hover:text-blue-core transition-colors cursor-pointer"
           >
             {log.amount_ml} ml
           </button>
@@ -96,13 +96,13 @@ function LogItem({ log }: { log: WaterLog }) {
 
       {!editing && (
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-text-muted">
+          <span className="text-xs font-medium text-text-muted dark:text-dark-text-muted">
             {formatTime(log.logged_at)}
           </span>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="w-6 h-6 rounded-md border-2 border-border bg-white text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+            className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
           >
             ✕
           </button>
@@ -137,13 +137,13 @@ export default function LogList({ logs }: LogListProps) {
       />
 
       <div className="flex justify-between items-center mb-3">
-        <div className="text-xs font-semibold uppercase tracking-widest text-text-muted">
+        <div className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted">
           Today&apos;s log
         </div>
         <button
           type="button"
           onClick={() => setShowConfirm(true)}
-          className="text-xs font-semibold text-text-muted hover:text-status-error transition-colors cursor-pointer"
+          className="text-xs font-semibold text-text-muted dark:text-dark-text-muted hover:text-status-error transition-colors cursor-pointer"
         >
           Clear all
         </button>

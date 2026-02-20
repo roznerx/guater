@@ -79,13 +79,13 @@ export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
 
       {/* Stats */}
       <div className="text-center">
-        <div className="text-4xl font-bold text-blue-deep leading-none">
+        <div className="text-4xl font-bold text-blue-deep dark:text-blue-light leading-none">
           {percentage >= 100 ? '100%' : `${percentage}%`}
         </div>
-        <div className="text-lg font-semibold text-blue-core mt-1">
+        <div className="text-lg font-semibold text-blue-core dark:text-blue-light mt-1">
           {consumed.toLocaleString()} ml
         </div>
-        <div className="text-sm font-medium text-text-muted mt-1">
+        <div className="text-sm font-medium text-text-muted dark:text-dark-text-muted mt-1">
           {consumed >= goal
             ? 'Goal reached! 🌊'
             : `${remaining.toLocaleString()} ml to go · goal ${goal.toLocaleString()}`

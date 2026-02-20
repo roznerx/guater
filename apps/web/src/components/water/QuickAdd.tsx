@@ -117,7 +117,7 @@ export default function QuickAdd({ presets }: QuickAddProps) {
               onChange={(e) => setCustomAmount(e.target.value)}
               placeholder="e.g. 350"
               disabled={isPending}
-              className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all disabled:opacity-50"
+              className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary dark:text-dark-text-primary placeholder:text-text-muted outline-none bg-white dark:bg-dark-card shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all disabled:opacity-50"
             />
           </div>
           <Button

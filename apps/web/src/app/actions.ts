@@ -135,3 +135,17 @@ export async function editLog(id: string, amount: number) {
 
   updateTag(`logs-${user.id}`)
 }
+
+export async function updateTheme(theme: 'light' | 'dark') {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase
+    .from('profiles')
+    .update({ theme })
+    .eq('id', user.id)
+
+  updateTag(`profile-${user.id}`)
+  revalidatePath('/', 'layout')
+}

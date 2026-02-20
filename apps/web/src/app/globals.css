@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
 
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
   /* Blues */
@@ -21,6 +22,14 @@
   --color-slate-soft: #E8EEF4;
   --color-slate-mid:  #94A8BA;
   --color-slate-deep: #4A6070;
+
+  /* Dark mode surface colors */
+  --color-dark-surface: #0F1E2A;
+  --color-dark-card: #152433;
+  --color-dark-border: #1E3448;
+  --color-dark-text-primary: #E8F0F7;
+  --color-dark-text-secondary: #94A8BA;
+  --color-dark-text-muted: #4A6070;
 
   /* Text */
   --color-text-primary:   #0F2A3A;

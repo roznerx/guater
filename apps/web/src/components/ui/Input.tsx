@@ -23,12 +23,14 @@ export default function Input({
         id={id}
         className={`
           border-2 border-blue-deep rounded-xl px-3 py-2.5
-          text-sm text-text-primary placeholder:text-text-muted
-          outline-none bg-white
+          text-sm text-text-primary dark:text-dark-text-primary
+          placeholder:text-text-muted dark:placeholder:text-dark-text-muted
+          outline-none bg-white dark:bg-dark-card
           shadow-[3px_3px_0_#0D4F78]
           focus:shadow-[1px_1px_0_#0D4F78]
           focus:translate-x-0.5 focus:translate-y-0.5
           transition-all
+          disabled:opacity-50 disabled:cursor-not-allowed
           ${className}
         `}
         {...props}
