@@ -122,3 +122,21 @@ export async function getPresets() {
   if (error) return []
   return data
 }
+
+export async function getMonthlyLogs(): Promise<WaterLog[]> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+  const { data, error } = await supabase
+    .from('water_logs')
+    .select('*')
+    .gte('logged_at', thirtyDaysAgo.toISOString())
+    .order('logged_at', { ascending: true })
+
+  if (error) return []
+  return data
+}
