@@ -38,3 +38,22 @@ export async function getProfile() {
   if (error) return null
   return data
 }
+
+export async function getWeeklyLogs() {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+  const { data, error } = await supabase
+    .from('water_logs')
+    .select('*')
+    .gte('logged_at', sevenDaysAgo.toISOString())
+    .order('logged_at', { ascending: false })
+
+  if (error) return []
+  return data
+}

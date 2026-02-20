@@ -19,6 +19,11 @@ export default function Navbar({ displayName }: NavbarProps) {
             Hey, {displayName}
           </span>
         )}
+        <Link href="/history">
+          <Button variant="secondary" className="text-xs py-1.5 px-3">
+            History
+          </Button>
+        </Link>
         <Link href="/settings">
           <Button variant="secondary" className="text-xs py-1.5 px-3">
             Settings
