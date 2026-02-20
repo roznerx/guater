@@ -9,27 +9,24 @@ export default async function SignupPage({
   const { error } = await searchParams
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
 
-      {/* Header */}
       <div>
-        <h1 className="font-serif text-3xl text-blue-deep">Create account</h1>
-        <p className="text-text-secondary text-sm mt-2 font-light">
+        <h1 className="text-2xl font-bold text-blue-deep">Create account</h1>
+        <p className="text-text-muted text-sm mt-1">
           Start tracking your hydration today
         </p>
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-status-error text-sm px-4 py-3 rounded-lg">
+        <div className="border-2 border-status-error bg-white text-status-error text-sm px-4 py-3 rounded-xl">
           {decodeURIComponent(error)}
         </div>
       )}
 
-      {/* Form */}
-      <form action={signup} className="flex flex-col gap-5">
+      <form action={signup} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="display_name" className="text-sm font-medium text-text-primary">
+          <label htmlFor="display_name" className="text-sm font-semibold text-text-secondary">
             Name
           </label>
           <input
@@ -38,12 +35,12 @@ export default async function SignupPage({
             type="text"
             required
             placeholder="Your name"
-            className="border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-blue-core focus:border-transparent bg-white transition-all"
+            className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-text-primary">
+          <label htmlFor="email" className="text-sm font-semibold text-text-secondary">
             Email
           </label>
           <input
@@ -52,12 +49,12 @@ export default async function SignupPage({
             type="email"
             required
             placeholder="you@example.com"
-            className="border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-blue-core focus:border-transparent bg-white transition-all"
+            className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm font-medium text-text-primary">
+          <label htmlFor="password" className="text-sm font-semibold text-text-secondary">
             Password
           </label>
           <input
@@ -67,23 +64,22 @@ export default async function SignupPage({
             required
             minLength={6}
             placeholder="••••••••"
-            className="border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-2 focus:ring-blue-core focus:border-transparent bg-white transition-all"
+            className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all"
           />
           <span className="text-xs text-text-muted">Minimum 6 characters</span>
         </div>
 
         <button
           type="submit"
-          className="bg-blue-core hover:bg-blue-deep text-white font-medium rounded-lg px-4 py-2.5 text-sm transition-colors mt-1"
+          className="bg-blue-core text-white font-semibold rounded-xl px-4 py-2.5 text-sm border-2 border-blue-deep shadow-[3px_3px_0_#0D4F78] hover:shadow-[1px_1px_0_#0D4F78] hover:translate-x-0.5 hover:translate-y-0.5 transition-all mt-1"
         >
           Create account
         </button>
       </form>
 
-      {/* Footer */}
       <p className="text-sm text-text-muted text-center">
         Already have an account?{' '}
-        <Link href="/login" className="text-blue-core hover:text-blue-deep font-medium transition-colors">
+        <Link href="/login" className="text-blue-core font-semibold hover:text-blue-deep transition-colors">
           Log in
         </Link>
       </p>

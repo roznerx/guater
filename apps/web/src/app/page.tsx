@@ -1,3 +1,7 @@
 export default function DashboardPage() {
-  return <h1 className="text-2xl font-bold text-slate-800">Today</h1>
+  return (
+    <main className="min-h-screen bg-surface p-6">
+      <h1 className="text-2xl font-bold text-blue-deep">Today</h1>
+    </main>
+  )
 }
