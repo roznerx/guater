@@ -1,6 +1,6 @@
 'use server'
 
-import { updateTag } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
 export async function logWater(formData: FormData) {
@@ -38,6 +38,9 @@ export async function updateProfile(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
 
+  const weightKg = formData.get('weight_kg')
+  const age = formData.get('age')
+
   await supabase
     .from('profiles')
     .update({
@@ -45,10 +48,15 @@ export async function updateProfile(formData: FormData) {
       daily_goal_ml: parseInt(formData.get('daily_goal_ml') as string),
       preferred_unit: formData.get('preferred_unit') as string,
       timezone: formData.get('timezone') as string,
+      weight_kg: weightKg ? parseFloat(weightKg as string) : null,
+      age: age ? parseInt(age as string) : null,
+      activity_level: formData.get('activity_level') as string,
+      climate: formData.get('climate') as string,
     })
     .eq('id', user.id)
 
   updateTag(`profile-${user.id}`)
+  revalidatePath('/settings', 'layout')
 }
 
 export async function clearAllLogs() {
