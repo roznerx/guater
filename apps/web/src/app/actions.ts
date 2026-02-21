@@ -146,3 +146,95 @@ export async function updateTheme(theme: 'light' | 'dark') {
     .update({ theme })
     .eq('id', user.id)
 }
+
+export async function logDiuretic(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase.from('diuretic_logs').insert({
+    user_id: user.id,
+    preset_id: formData.get('preset_id') as string || null,
+    label: formData.get('label') as string,
+    amount_ml: parseInt(formData.get('amount_ml') as string),
+    diuretic_factor: parseFloat(formData.get('diuretic_factor') as string),
+  })
+
+  updateTag(`diuretic-${user.id}`)
+}
+
+export async function deleteDiureticLog(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase
+    .from('diuretic_logs')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  updateTag(`diuretic-${user.id}`)
+}
+
+export async function addDiureticPreset(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { data: existing } = await supabase
+    .from('diuretic_presets')
+    .select('sort_order')
+    .eq('user_id', user.id)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const nextOrder = existing && existing.length > 0
+    ? existing[0].sort_order + 1
+    : 0
+
+  await supabase.from('diuretic_presets').insert({
+    user_id: user.id,
+    label: formData.get('label') as string,
+    amount_ml: parseInt(formData.get('amount_ml') as string),
+    diuretic_factor: parseFloat(formData.get('diuretic_factor') as string),
+    color: formData.get('color') as string,
+    sort_order: nextOrder,
+  })
+
+  updateTag(`diuretic-presets-${user.id}`)
+}
+
+export async function deleteDiureticPreset(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase
+    .from('diuretic_presets')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  updateTag(`diuretic-presets-${user.id}`)
+}
+
+export async function clearAllDiureticLogs() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const now = new Date()
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const endOfDay = new Date(startOfDay)
+  endOfDay.setDate(endOfDay.getDate() + 1)
+
+  await supabase
+    .from('diuretic_logs')
+    .delete()
+    .eq('user_id', user.id)
+    .gte('logged_at', startOfDay.toISOString())
+    .lt('logged_at', endOfDay.toISOString())
+
+  updateTag(`diuretic-${user.id}`)
+}

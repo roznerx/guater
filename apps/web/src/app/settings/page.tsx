@@ -1,16 +1,23 @@
-import { getProfile, getPresets } from '@/lib/water'
+import { getProfile, getPresets, getDiureticPresets } from '@/lib/water'
 import { Card, Button } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
 import { logout } from '@/app/(auth)/actions'
 import PresetsManager from '@/components/water/PresetsManager'
+import DiureticPresetsManager from '@/components/water/diuretics/DiureticPresetsManager'
 import SettingsClient from './SettingsClient'
 
 export default async function SettingsPage() {
-  const [profile, presets] = await Promise.all([getProfile(), getPresets()])
+  const [profile, presets, diureticPresets] = await Promise.all([
+    getProfile(),
+    getPresets(),
+    getDiureticPresets(),
+  ])
+
+  const theme = (profile?.theme ?? 'light') as 'light' | 'dark'
 
   return (
     <div className="min-h-screen bg-surface dark:bg-dark-surface">
-      <Navbar displayName={profile?.display_name ?? undefined} />
+      <Navbar displayName={profile?.display_name ?? undefined} theme={theme} />
 
       <main className="max-w-lg mx-auto px-6 py-8 flex flex-col gap-6">
 
@@ -25,6 +32,10 @@ export default async function SettingsPage() {
 
         <Card>
           <PresetsManager presets={presets} />
+        </Card>
+
+        <Card>
+          <DiureticPresetsManager presets={diureticPresets} />
         </Card>
 
         <Card>

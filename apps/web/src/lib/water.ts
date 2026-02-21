@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache'
-import type { WaterLog } from '@guater/types'
+import type { DiureticLog, DiureticPreset, WaterLog } from '@guater/types'
 import { createClient } from '@/lib/supabase/server'
 
 export async function getProfile() {
@@ -136,6 +136,42 @@ export async function getMonthlyLogs(): Promise<WaterLog[]> {
     .select('*')
     .gte('logged_at', thirtyDaysAgo.toISOString())
     .order('logged_at', { ascending: true })
+
+  if (error) return []
+  return data
+}
+
+export async function getTodayDiureticLogs(): Promise<DiureticLog[]> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const now = new Date()
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const endOfDay = new Date(startOfDay)
+  endOfDay.setDate(endOfDay.getDate() + 1)
+
+  const { data, error } = await supabase
+    .from('diuretic_logs')
+    .select('*')
+    .gte('logged_at', startOfDay.toISOString())
+    .lt('logged_at', endOfDay.toISOString())
+    .order('logged_at', { ascending: false })
+
+  if (error) return []
+  return data
+}
+
+export async function getDiureticPresets(): Promise<DiureticPreset[]> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .from('diuretic_presets')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('sort_order', { ascending: true })
 
   if (error) return []
   return data

@@ -1,13 +1,15 @@
-import { getProfile, getTodayLogs, getStreak, getPresets } from '@/lib/water'
-import { WaterBottle, ProgressBar, QuickAdd, LogList, StreakBadge, DailyWarningBanner } from '@/components/water'
+import { getProfile, getTodayLogs, getStreak, getPresets, getTodayDiureticLogs, getDiureticPresets } from '@/lib/water'
+import { WaterBottle, ProgressBar, QuickAdd, LogList, StreakBadge, DailyWarningBanner, DiureticTracker } from '@/components/water'
 import { Card } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
 
 export default async function DashboardPage() {
-  const [profile, logs, presets] = await Promise.all([
+  const [profile, logs, presets, diureticLogs, diureticPresets] = await Promise.all([
     getProfile(),
     getTodayLogs(),
     getPresets(),
+    getTodayDiureticLogs(),
+    getDiureticPresets(),
   ])
 
   const goal = profile?.daily_goal_ml ?? 2500
@@ -31,18 +33,22 @@ export default async function DashboardPage() {
 
         <DailyWarningBanner consumed={consumed} />
 
-        <Card className="dark:bg-dark-card dark:border-dark-border">
+        <Card>
           <WaterBottle consumed={consumed} goal={goal} />
           <div className="mt-4">
             <ProgressBar consumed={consumed} goal={goal} />
           </div>
         </Card>
 
-        <Card className="dark:bg-dark-card dark:border-dark-border">
+        <Card>
           <QuickAdd presets={presets} />
         </Card>
 
-        <Card className="dark:bg-dark-card dark:border-dark-border">
+        <Card>
+          <DiureticTracker logs={diureticLogs} presets={diureticPresets} />
+        </Card>
+
+        <Card>
           <LogList logs={logs} />
         </Card>
 
