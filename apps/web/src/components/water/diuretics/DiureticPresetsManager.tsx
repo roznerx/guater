@@ -27,6 +27,10 @@ const DRINK_TYPES = [
   { label: 'Green tea',    factor: 0.15, color: '#2AABA2' },
   { label: 'Mate',         factor: 0.35, color: '#1A7A74' },
   { label: 'Energy drink', factor: 0.45, color: '#3E8FC0' },
+  { label: 'Soda',         factor: 0.20, color: '#7FB8D8' },
+  { label: 'Beer',         factor: 0.50, color: '#E8A230' },
+  { label: 'Wine',         factor: 0.60, color: '#94A8BA' },
+  { label: 'Sparkling',    factor: 0.10, color: '#8DCFCA' },
   { label: 'Custom',       factor: 0.30, color: '#94A8BA' },
 ]
 
@@ -39,7 +43,6 @@ export default function DiureticPresetsManager({ presets }: DiureticPresetsManag
   const [pending, setPending] = useState(false)
   const [selectedType, setSelectedType] = useState(DRINK_TYPES[0])
   const [customColor, setCustomColor] = useState(DRINK_TYPES[0].color)
-  const isCustom = selectedType.label === 'Custom'
 
   function handleTypeChange(label: string) {
     const found = DRINK_TYPES.find(d => d.label === label)

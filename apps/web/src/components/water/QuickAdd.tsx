@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Button } from '@/components/ui'
-import { ConfirmDialog } from '@/components/ui'
+import { Button, ConfirmDialog } from '@/components/ui'
 import { logWater } from '@/app/actions'
 
 const SINGLE_ENTRY_WARNING_THRESHOLD = 1000
@@ -51,6 +50,7 @@ export default function QuickAdd({ presets }: QuickAddProps) {
 
   async function handleConfirmWarning() {
     if (!pendingFormData) return
+    setShowWarning(false)
     await new Promise(resolve => setTimeout(resolve, 1500))
     startTransition(async () => {
       await logWater(pendingFormData)
@@ -71,11 +71,14 @@ export default function QuickAdd({ presets }: QuickAddProps) {
           setShowWarning(false)
           setPendingFormData(null)
         }}
+        confirmLabel="Yes, log it"
+        confirmVariant="primary"
       />
 
-      <div className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">
+      <div className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted mb-3">
         Quick add
       </div>
+
       <div className="flex gap-2 flex-wrap">
         {activePresets.map((preset) => (
           <form key={preset.id} action={handleLogWater}>
