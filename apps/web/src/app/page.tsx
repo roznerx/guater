@@ -60,7 +60,7 @@ export default async function DashboardPage() {
           </Card>
 
           <Card>
-            <LogList logs={logs} />
+            <LogList logs={logs} diureticLogs={diureticLogs} />
           </Card>
         </div>
 
