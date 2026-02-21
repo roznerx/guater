@@ -3,6 +3,7 @@ import { Fredoka } from 'next/font/google'
 import './globals.css'
 import { getProfile } from '@/lib/water'
 import ThemeProvider from '@/components/ThemeProvider'
+import RefreshOnFocus from '@/components/RefreshOnFocus'
 
 const fredoka = Fredoka({
   subsets: ['latin'],
@@ -27,6 +28,7 @@ export default async function RootLayout({
     <html lang="en" className={fredoka.variable}>
       <body className="font-sans">
         <ThemeProvider theme={theme}>
+          <RefreshOnFocus />
           {children}
         </ThemeProvider>
       </body>

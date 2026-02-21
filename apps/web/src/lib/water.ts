@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import type { DiureticLog, DiureticPreset, WaterLog } from '@guater/types'
 import { createClient } from '@/lib/supabase/server'
-import { getTodayRangeForTimezone } from './utils'
+import { getTimezoneOffset, getTodayRangeForTimezone } from './utils'
 
 export async function getProfile() {
   const supabase = await createClient()
@@ -66,51 +66,63 @@ export async function getWeeklyLogs(): Promise<WaterLog[]> {
   return data
 }
 
-export async function getStreak(goalMl: number): Promise<number> {
+export async function getStreak(goal: number): Promise<number> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return 0
 
-  return unstable_cache(
-    async () => {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .single()
 
-      const { data, error } = await supabase
-        .from('water_logs')
-        .select('amount_ml, logged_at')
-        .gte('logged_at', thirtyDaysAgo.toISOString())
-        .order('logged_at', { ascending: false })
+  const timezone = profile?.timezone ?? 'UTC'
 
-      if (error || !data) return 0
+  const getTimezoneOffset = (date: Date, tz: string) => {
+    const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }))
+    const tzDate = new Date(date.toLocaleString('en-US', { timeZone: tz }))
+    return utcDate.getTime() - tzDate.getTime()
+  }
 
-      const byDay: Record<string, number> = {}
-      for (const log of data) {
-        const day = new Date(log.logged_at).toLocaleDateString('en-CA')
-        byDay[day] = (byDay[day] ?? 0) + log.amount_ml
-      }
+  const now = new Date()
+  const offset = getTimezoneOffset(now, timezone)
 
-      let streak = 0
-      const today = new Date()
+  const cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
 
-      for (let i = 0; i < 30; i++) {
-        const date = new Date(today)
-        date.setDate(date.getDate() - i)
-        const key = date.toLocaleDateString('en-CA')
+  const { data, error } = await supabase
+    .from('water_logs')
+    .select('logged_at, amount_ml')
+    .gte('logged_at', cutoff.toISOString())
+    .order('logged_at', { ascending: false })
 
-        if ((byDay[key] ?? 0) >= goalMl) {
-          streak++
-        } else {
-          if (i === 0) continue
-          break
-        }
-      }
+  if (error || !data) return 0
 
-      return streak
-    },
-    [`streak-${user.id}`],
-    { tags: [`logs-${user.id}`] }
-  )()
+  const byDay: Record<string, number> = {}
+  for (const log of data) {
+    const localDate = new Date(new Date(log.logged_at).getTime() - offset)
+    const dayStr = localDate.toLocaleDateString('en-CA')
+    byDay[dayStr] = (byDay[dayStr] ?? 0) + log.amount_ml
+  }
+
+  let streak = 0
+  const todayStr = new Date(now.getTime() - offset).toLocaleDateString('en-CA')
+
+  for (let i = 0; i < 90; i++) {
+    const date = new Date(now.getTime() - offset)
+    date.setDate(date.getDate() - i)
+    const dayStr = date.toLocaleDateString('en-CA')
+
+    if (dayStr === todayStr && (byDay[dayStr] ?? 0) < goal) break
+
+    if ((byDay[dayStr] ?? 0) >= goal) {
+      streak++
+    } else {
+      break
+    }
+  }
+
+  return streak
 }
 
 export async function getPresets() {
@@ -133,13 +145,25 @@ export async function getMonthlyLogs(): Promise<WaterLog[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .single()
+
+  const timezone = profile?.timezone ?? 'UTC'
+
+  const now = new Date()
+  const todayStr = now.toLocaleDateString('en-CA', { timeZone: timezone })
+  const offset = getTimezoneOffset(now, timezone)
+  const startLocal = new Date(`${todayStr}T00:00:00`)
+  startLocal.setDate(startLocal.getDate() - 29)
+  const start = new Date(startLocal.getTime() + offset)
 
   const { data, error } = await supabase
     .from('water_logs')
     .select('*')
-    .gte('logged_at', thirtyDaysAgo.toISOString())
+    .gte('logged_at', start.toISOString())
     .order('logged_at', { ascending: true })
 
   if (error) return []
