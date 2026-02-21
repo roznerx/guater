@@ -15,14 +15,12 @@ export default function ThemeToggle({ currentTheme }: ThemeToggleProps) {
     const newDark = !isDark
     setIsDark(newDark)
 
-    // Update DOM immediately
     if (newDark) {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
     }
 
-    // Debounce the API call — only fires 600ms after last click
     if (debounceTimer.current) clearTimeout(debounceTimer.current)
     debounceTimer.current = setTimeout(() => {
       updateTheme(newDark ? 'dark' : 'light')
@@ -52,5 +50,5 @@ export default function ThemeToggle({ currentTheme }: ThemeToggleProps) {
         `}
       />
     </button>
-      )
+  )
 }

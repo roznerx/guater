@@ -145,7 +145,4 @@ export async function updateTheme(theme: 'light' | 'dark') {
     .from('profiles')
     .update({ theme })
     .eq('id', user.id)
-
-  updateTag(`profile-${user.id}`)
-  revalidatePath('/', 'layout')
 }
