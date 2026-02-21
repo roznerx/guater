@@ -2,6 +2,7 @@
 
 import { revalidatePath, updateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getTodayRangeForTimezone } from '@/lib/utils'
 
 export async function logWater(formData: FormData) {
   const supabase = await createClient()
@@ -64,17 +65,21 @@ export async function clearAllLogs() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
 
-  const now = new Date()
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const endOfDay = new Date(startOfDay)
-  endOfDay.setDate(endOfDay.getDate() + 1)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .single()
+
+  const timezone = profile?.timezone ?? 'UTC'
+  const { start, end } = getTodayRangeForTimezone(timezone)
 
   await supabase
     .from('water_logs')
     .delete()
     .eq('user_id', user.id)
-    .gte('logged_at', startOfDay.toISOString())
-    .lt('logged_at', endOfDay.toISOString())
+    .gte('logged_at', start)
+    .lt('logged_at', end)
 
   updateTag(`logs-${user.id}`)
 }
@@ -224,17 +229,21 @@ export async function clearAllDiureticLogs() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
 
-  const now = new Date()
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const endOfDay = new Date(startOfDay)
-  endOfDay.setDate(endOfDay.getDate() + 1)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .single()
+
+  const timezone = profile?.timezone ?? 'UTC'
+  const { start, end } = getTodayRangeForTimezone(timezone)
 
   await supabase
     .from('diuretic_logs')
     .delete()
     .eq('user_id', user.id)
-    .gte('logged_at', startOfDay.toISOString())
-    .lt('logged_at', endOfDay.toISOString())
+    .gte('logged_at', start)
+    .lt('logged_at', end)
 
   updateTag(`diuretic-${user.id}`)
 }

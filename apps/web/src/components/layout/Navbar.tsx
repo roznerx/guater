@@ -40,8 +40,12 @@ export default function Navbar({ displayName, theme = 'light' }: NavbarProps) {
             title="Log out"
             className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-xl border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted dark:text-dark-text-muted shadow-[3px_3px_0_#DDE8F0] hover:shadow-[1px_1px_0_#DDE8F0] hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer text-xs font-semibold"
           >
-            <span className="hidden sm:block">Log out</span>
-            <span className="sm:hidden">⏻</span>
+            <span className="hidden sm:inline">Log out</span>
+            <svg className="inline sm:hidden w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
           </button>
         </form>
       </div>

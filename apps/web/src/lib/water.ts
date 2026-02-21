@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import type { DiureticLog, DiureticPreset, WaterLog } from '@guater/types'
 import { createClient } from '@/lib/supabase/server'
+import { getTodayRangeForTimezone } from './utils'
 
 export async function getProfile() {
   const supabase = await createClient()
@@ -27,16 +28,20 @@ export async function getTodayLogs(): Promise<WaterLog[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  const now = new Date()
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const endOfDay = new Date(startOfDay)
-  endOfDay.setDate(endOfDay.getDate() + 1)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .single()
+
+  const timezone = profile?.timezone ?? 'UTC'
+  const { start, end } = getTodayRangeForTimezone(timezone)
 
   const { data, error } = await supabase
     .from('water_logs')
     .select('*')
-    .gte('logged_at', startOfDay.toISOString())
-    .lt('logged_at', endOfDay.toISOString())
+    .gte('logged_at', start)
+    .lt('logged_at', end)
     .order('logged_at', { ascending: false })
 
   if (error) return []
@@ -146,16 +151,20 @@ export async function getTodayDiureticLogs(): Promise<DiureticLog[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  const now = new Date()
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const endOfDay = new Date(startOfDay)
-  endOfDay.setDate(endOfDay.getDate() + 1)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .single()
+
+  const timezone = profile?.timezone ?? 'UTC'
+  const { start, end } = getTodayRangeForTimezone(timezone)
 
   const { data, error } = await supabase
     .from('diuretic_logs')
     .select('*')
-    .gte('logged_at', startOfDay.toISOString())
-    .lt('logged_at', endOfDay.toISOString())
+    .gte('logged_at', start)
+    .lt('logged_at', end)
     .order('logged_at', { ascending: false })
 
   if (error) return []
@@ -176,3 +185,4 @@ export async function getDiureticPresets(): Promise<DiureticPreset[]> {
   if (error) return []
   return data
 }
+

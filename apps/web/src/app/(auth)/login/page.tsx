@@ -11,22 +11,23 @@ export default async function LoginPage({
 
   return (
     <div className="flex flex-col gap-6">
-
       <div>
-        <h1 className="text-2xl font-bold text-blue-deep">Welcome back</h1>
-        <p className="text-text-muted text-sm mt-1">
+        <h1 className="text-2xl font-bold text-blue-deep dark:text-blue-light">
+          Welcome back
+        </h1>
+        <p className="text-sm text-text-muted dark:text-dark-text-muted mt-1">
           Log in to your Güater account
         </p>
       </div>
 
       {error && (
-        <div className="border-2 border-status-error bg-white text-status-error text-sm px-4 py-3 rounded-xl">
+        <div className="border-2 border-status-error bg-white dark:bg-dark-card text-status-error text-sm px-4 py-3 rounded-xl">
           {decodeURIComponent(error)}
         </div>
       )}
 
       {message && (
-        <div className="border-2 border-teal-core bg-white text-teal-deep text-sm px-4 py-3 rounded-xl">
+        <div className="border-2 border-teal-core bg-white dark:bg-dark-card text-teal-deep text-sm px-4 py-3 rounded-xl">
           {decodeURIComponent(message)}
         </div>
       )}
@@ -54,19 +55,18 @@ export default async function LoginPage({
       </form>
 
       <div className="flex flex-col gap-3 text-center">
-        <p className="text-sm text-text-muted">
+        <p className="text-sm text-text-muted dark:text-dark-text-muted">
           <Link href="/forgot-password" className="text-blue-core font-semibold hover:text-blue-deep transition-colors">
             Forgot your password?
           </Link>
         </p>
-        <p className="text-sm text-text-muted">
+        <p className="text-sm text-text-muted dark:text-dark-text-muted">
           Don&apos;t have an account?{' '}
           <Link href="/signup" className="text-blue-core font-semibold hover:text-blue-deep transition-colors">
             Sign up
           </Link>
         </p>
       </div>
-
     </div>
   )
 }

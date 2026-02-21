@@ -45,19 +45,19 @@ export default function PresetsManager({ presets }: PresetsManagerProps) {
         {presets.map((preset) => (
           <div
             key={preset.id}
-            className="flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border bg-surface"
+            className="flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border dark:border-dark-border bg-surface dark:bg-dark-surface"
           >
             <div>
-              <span className="font-semibold text-text-primary">
+              <span className="font-semibold text-text-primary dark:text-dark-text-primary">
                 {preset.label}
               </span>
-              <span className="text-sm text-text-muted ml-2">
+              <span className="text-sm text-text-muted dark:text-dark-text-muted ml-2">
                 {preset.amount_ml} ml
               </span>
             </div>
             <button
               onClick={() => handleDelete(preset.id)}
-              className="w-6 h-6 rounded-md border-2 border-border bg-white text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer"
+              className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer"
             >
               ✕
             </button>

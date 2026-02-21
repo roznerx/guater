@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { updateProfile } from '@/app/actions'
-import { Button, Input, Toast } from '@/components/ui'
 import { calculateRecommendedIntake } from '@/lib/hydration'
+import { Button, Input, Toast } from '@/components/ui'
 
 interface Profile {
   display_name?: string
@@ -20,10 +20,20 @@ interface SettingsClientProps {
   profile: Profile | null
 }
 
+const selectClass = `
+  border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm
+  text-text-primary dark:text-dark-text-primary
+  outline-none bg-white dark:bg-dark-card
+  shadow-[3px_3px_0_#0D4F78]
+  focus:shadow-[1px_1px_0_#0D4F78]
+  focus:translate-x-0.5 focus:translate-y-0.5
+  transition-all cursor-pointer
+  disabled:opacity-50 disabled:cursor-not-allowed
+`
+
 export default function SettingsClient({ profile }: SettingsClientProps) {
   const [showToast, setShowToast] = useState(false)
   const [pending, setPending] = useState(false)
-
   const [weightKg, setWeightKg] = useState(profile?.weight_kg?.toString() ?? '')
   const [age, setAge] = useState(profile?.age?.toString() ?? '')
   const [activityLevel, setActivityLevel] = useState(profile?.activity_level ?? 'moderate')
@@ -70,7 +80,6 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
           disabled={pending}
         />
 
-        {/* Health data */}
         <div className="grid grid-cols-2 gap-3">
           <Input
             id="weight_kg"
@@ -99,7 +108,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="activity_level" className="text-sm font-semibold text-text-secondary">
+          <label htmlFor="activity_level" className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
             Activity level
           </label>
           <select
@@ -108,7 +117,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             value={activityLevel}
             onChange={(e) => setActivityLevel(e.target.value)}
             disabled={pending}
-            className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className={selectClass}
           >
             <option value="sedentary">Sedentary — mostly sitting</option>
             <option value="moderate">Moderate — light exercise</option>
@@ -118,7 +127,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="climate" className="text-sm font-semibold text-text-secondary">
+          <label htmlFor="climate" className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
             Climate
           </label>
           <select
@@ -127,7 +136,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             value={climate}
             onChange={(e) => setClimate(e.target.value)}
             disabled={pending}
-            className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className={selectClass}
           >
             <option value="cold">Cold</option>
             <option value="temperate">Temperate</option>
@@ -135,14 +144,13 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
           </select>
         </div>
 
-        {/* Recommended intake callout */}
         {recommended && (
-          <div className="border-2 border-blue-deep rounded-xl px-4 py-3 bg-blue-pale shadow-[3px_3px_0_#0D4F78]">
+          <div className="border-2 border-blue-deep rounded-xl px-4 py-3 bg-blue-pale dark:bg-dark-card shadow-[3px_3px_0_#0D4F78]">
             <div className="text-xs font-semibold uppercase tracking-widest text-blue-core mb-1">
               Recommended intake
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-lg font-bold text-blue-deep">
+              <span className="text-lg font-bold text-blue-deep dark:text-blue-light">
                 {recommended.toLocaleString()} ml / day
               </span>
               <button
@@ -171,7 +179,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
         />
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="preferred_unit" className="text-sm font-semibold text-text-secondary">
+          <label htmlFor="preferred_unit" className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
             Unit
           </label>
           <select
@@ -179,7 +187,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             name="preferred_unit"
             defaultValue={profile?.preferred_unit ?? 'ml'}
             disabled={pending}
-            className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className={selectClass}
           >
             <option value="ml">ml</option>
             <option value="oz">oz</option>
@@ -187,7 +195,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="timezone" className="text-sm font-semibold text-text-secondary">
+          <label htmlFor="timezone" className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
             Timezone
           </label>
           <select
@@ -195,7 +203,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             name="timezone"
             defaultValue={profile?.timezone ?? 'UTC'}
             disabled={pending}
-            className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className={selectClass}
           >
             <option value="UTC">UTC</option>
             <option value="America/Argentina/Buenos_Aires">Buenos Aires (ART)</option>
