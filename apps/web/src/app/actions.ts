@@ -30,6 +30,7 @@ export async function deleteLog(id: string) {
     .from('water_logs')
     .delete()
     .eq('id', id)
+    .eq('user_id', user.id)
 
   revalidatePath('/')
 }
