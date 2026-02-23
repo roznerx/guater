@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath, updateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTodayRangeForTimezone } from '@/lib/utils'
 
@@ -18,7 +18,7 @@ export async function logWater(formData: FormData) {
     source: 'quick',
   })
 
-  updateTag(`logs-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function deleteLog(id: string) {
@@ -31,7 +31,7 @@ export async function deleteLog(id: string) {
     .delete()
     .eq('id', id)
 
-  updateTag(`logs-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function updateProfile(formData: FormData) {
@@ -56,7 +56,7 @@ export async function updateProfile(formData: FormData) {
     })
     .eq('id', user.id)
 
-  updateTag(`profile-${user.id}`)
+  revalidatePath('/')
   revalidatePath('/settings', 'layout')
 }
 
@@ -81,7 +81,7 @@ export async function clearAllLogs() {
     .gte('logged_at', start)
     .lt('logged_at', end)
 
-  updateTag(`logs-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function addPreset(formData: FormData) {
@@ -111,7 +111,7 @@ export async function addPreset(formData: FormData) {
     sort_order: nextOrder,
   })
 
-  updateTag(`presets-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function deletePreset(id: string) {
@@ -124,7 +124,7 @@ export async function deletePreset(id: string) {
     .delete()
     .eq('id', id)
 
-  updateTag(`presets-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function editLog(id: string, amount: number) {
@@ -138,7 +138,7 @@ export async function editLog(id: string, amount: number) {
     .eq('id', id)
     .eq('user_id', user.id)
 
-  updateTag(`logs-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function updateTheme(theme: 'light' | 'dark') {
@@ -165,7 +165,7 @@ export async function logDiuretic(formData: FormData) {
     diuretic_factor: parseFloat(formData.get('diuretic_factor') as string),
   })
 
-  updateTag(`diuretic-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function deleteDiureticLog(id: string) {
@@ -179,7 +179,7 @@ export async function deleteDiureticLog(id: string) {
     .eq('id', id)
     .eq('user_id', user.id)
 
-  updateTag(`diuretic-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function addDiureticPreset(formData: FormData) {
@@ -207,7 +207,7 @@ export async function addDiureticPreset(formData: FormData) {
     sort_order: nextOrder,
   })
 
-  updateTag(`diuretic-presets-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function deleteDiureticPreset(id: string) {
@@ -221,7 +221,7 @@ export async function deleteDiureticPreset(id: string) {
     .eq('id', id)
     .eq('user_id', user.id)
 
-  updateTag(`diuretic-presets-${user.id}`)
+  revalidatePath('/')
 }
 
 export async function clearAllDiureticLogs() {
@@ -245,5 +245,5 @@ export async function clearAllDiureticLogs() {
     .gte('logged_at', start)
     .lt('logged_at', end)
 
-  updateTag(`diuretic-${user.id}`)
+  revalidatePath('/')
 }

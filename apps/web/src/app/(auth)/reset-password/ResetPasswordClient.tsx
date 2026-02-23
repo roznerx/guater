@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui'
 
@@ -12,7 +11,6 @@ export default function ResetPasswordClient() {
   const [pending, setPending] = useState(false)
   const [accessToken, setAccessToken] = useState('')
   const [refreshToken, setRefreshToken] = useState('')
-  const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {

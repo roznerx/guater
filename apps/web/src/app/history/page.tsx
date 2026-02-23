@@ -1,11 +1,11 @@
 import { getProfile, getMonthlyLogs } from '@/lib/water'
 import { Card } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
-import type { WaterLog } from '@guater/types'
+import { WaterLog } from '@guater/types'
 
-function groupByDay(logs: WaterLog[]): Record<string, number> {
+function groupByDay(logs: Pick<WaterLog, 'logged_at' | 'amount_ml'>[], timezone: string): Record<string, number> {
   return logs.reduce((acc, log) => {
-    const day = new Date(log.logged_at).toLocaleDateString('en-CA')
+    const day = new Date(log.logged_at).toLocaleDateString('en-CA', { timeZone: timezone })
     acc[day] = (acc[day] ?? 0) + log.amount_ml
     return acc
   }, {} as Record<string, number>)
@@ -19,9 +19,11 @@ function formatDate(isoDate: string) {
 }
 
 export default async function HistoryPage() {
-  const [profile, logs] = await Promise.all([getProfile(), getMonthlyLogs()])
+  const profile = await getProfile()
+  const timezone = profile?.timezone ?? 'UTC'
+  const logs = await getMonthlyLogs(timezone)
   const goal = profile?.daily_goal_ml ?? 2500
-  const grouped = groupByDay(logs)
+  const grouped = groupByDay(logs, timezone)
   const theme = (profile?.theme ?? 'light') as 'light' | 'dark'
 
   const days = Object.entries(grouped)
@@ -131,8 +133,8 @@ export default async function HistoryPage() {
             Last 30 days
           </div>
           <div className="grid grid-cols-10 gap-1.5">
-            {calendarDays.map(({ key, date, total, pct }) => {
-              const isToday = key === today.toLocaleDateString('en-CA')
+            {calendarDays.map(({ key, total, pct }) => {
+              const isToday = key === today.toLocaleDateString('en-CA', { timeZone: timezone })
               const bgColor = total === 0
                 ? 'bg-slate-soft dark:bg-dark-border'
                 : pct >= 1

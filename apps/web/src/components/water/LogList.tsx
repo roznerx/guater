@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import type { WaterLog, DiureticLog } from '@guater/types'
-import { deleteLog, clearAllLogs, editLog } from '@/app/actions'
-import { deleteDiureticLog, clearAllDiureticLogs } from '@/app/actions'
+import { deleteLog, clearAllLogs, editLog, clearAllDiureticLogs } from '@/app/actions'
+import { deleteDiureticLog } from '@/app/actions'
 import { ConfirmDialog } from '@/components/ui'
 
 interface LogListProps {
@@ -166,11 +166,11 @@ export default function LogList({ logs, diureticLogs }: LogListProps) {
         isOpen={showConfirm}
         title="Clear all water logs?"
         message="This will delete all water entries for today. This cannot be undone."
-        onConfirm={async () => {
-          await clearAllLogs()
-          await new Promise(resolve => setTimeout(resolve, 1500))
-          setShowConfirm(false)
-        }}
+       onConfirm={async () => {
+        await Promise.all([clearAllLogs(), clearAllDiureticLogs()])
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        setShowConfirm(false)
+      }}
         onCancel={() => setShowConfirm(false)}
       />
 

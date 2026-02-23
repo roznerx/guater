@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import type { DiureticLog, DiureticPreset } from '@guater/types'
-import { logDiuretic, deleteDiureticLog, clearAllDiureticLogs } from '@/app/actions'
+import { logDiuretic, clearAllDiureticLogs } from '@/app/actions'
 import { ConfirmDialog } from '@/components/ui'
 import MinBottle from './MinBottle'
 
@@ -48,26 +48,8 @@ export default function DiureticTracker({ logs, presets }: DiureticTrackerProps)
     })
   }
 
-  async function handleDelete(id: string) {
-    startTransition(async () => {
-      await deleteDiureticLog(id)
-    })
-  }
-
   return (
     <div>
-      <ConfirmDialog
-        isOpen={showConfirm}
-        title="Clear all diuretic logs?"
-        message="This will delete all diuretic drink entries for today. This cannot be undone."
-        onConfirm={async () => {
-          await clearAllDiureticLogs()
-          await new Promise(resolve => setTimeout(resolve, 1500))
-          setShowConfirm(false)
-        }}
-        onCancel={() => setShowConfirm(false)}
-      />
-
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted">
@@ -78,15 +60,6 @@ export default function DiureticTracker({ logs, presets }: DiureticTrackerProps)
             <div className="text-xs font-semibold text-status-error">
               -{totalNetLoss} ml net loss
             </div>
-          )}
-          {logs.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowConfirm(true)}
-              className="text-xs font-semibold text-text-muted dark:text-dark-text-muted hover:text-status-error transition-colors cursor-pointer"
-            >
-              Clear all
-            </button>
           )}
         </div>
       </div>
