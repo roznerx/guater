@@ -1,0 +1,41 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './app/**/*.{js,jsx,ts,tsx}',
+    './components/**/*.{js,jsx,ts,tsx}',
+  ],
+  presets: [require('nativewind/preset')],
+  theme: {
+    extend: {
+      colors: {
+        'blue-pale':  '#C8DCEE',
+        'blue-light': '#7FB8D8',
+        'blue-mid':   '#3E8FC0',
+        'blue-core':  '#1A6FA0',
+        'blue-deep':  '#0D4F78',
+        'teal-light': '#8DCFCA',
+        'teal-core':  '#2AABA2',
+        'teal-deep':  '#1A7A74',
+        'surface':    '#F4F8FB',
+        'border':     '#DDE8F0',
+        'slate-soft': '#E8EEF4',
+        'slate-mid':  '#94A8BA',
+        'slate-deep': '#4A6070',
+        'text-primary':   '#0F2A3A',
+        'text-secondary': '#4A6070',
+        'text-muted':     '#94A8BA',
+        'status-success': '#2AABA2',
+        'status-warning': '#E8A230',
+        'status-error':   '#D95F5F',
+        'dark-surface':        '#0F1E2A',
+        'dark-card':           '#152433',
+        'dark-border':         '#1E3448',
+        'dark-text-primary':   '#E8F0F7',
+        'dark-text-secondary': '#94A8BA',
+        'dark-text-muted':     '#4A6070',
+      },
+    },
+  },
+  darkMode: 'class',
+  plugins: [],
+}
