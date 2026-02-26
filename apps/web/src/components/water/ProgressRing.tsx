@@ -29,12 +29,12 @@ export default function ProgressRing({ consumed, goal }: ProgressRingProps) {
       {/* Info */}
       <div>
         <div className="text-3xl font-bold text-blue-deep leading-none">
-          {consumed.toLocaleString()}
+          {consumed.toLocaleString('en-US')}
           <span className="text-base font-semibold text-text-muted ml-1">ml</span>
         </div>
         <div className="text-sm font-medium text-text-secondary mt-1">
           {remaining > 0
-            ? `${remaining.toLocaleString()} ml to go · goal ${goal.toLocaleString()}`
+            ? `${remaining.toLocaleString('en-US')} ml to go · goal ${goal.toLocaleString('en-US')}`
             : `Goal reached! 🌊`
           }
         </div>

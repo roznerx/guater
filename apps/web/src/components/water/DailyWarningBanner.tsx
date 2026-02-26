@@ -15,7 +15,7 @@ export default function DailyWarningBanner({ consumed }: DailyWarningBannerProps
           High daily intake
         </p>
         <p className="text-xs font-medium text-text-secondary mt-0.5">
-          You&apos;ve logged {consumed.toLocaleString()}ml today. Drinking more than 6,000ml daily can be harmful. Consider consulting a doctor if this is a regular pattern.
+          You&apos;ve logged {consumed.toLocaleString('en-US')}ml today. Drinking more than 6,000ml daily can be harmful. Consider consulting a doctor if this is a regular pattern.
         </p>
       </div>
     </div>

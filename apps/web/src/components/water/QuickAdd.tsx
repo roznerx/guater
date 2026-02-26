@@ -65,7 +65,7 @@ export default function QuickAdd({ presets }: QuickAddProps) {
       <ConfirmDialog
         isOpen={showWarning}
         title="Large amount detected"
-        message={`Logging ${pendingFormData ? parseInt(pendingFormData.get('amount') as string).toLocaleString() : ''}ml at once may be unsafe. Drinking more than 1,000ml in a short period can cause hyponatremia. Are you sure?`}
+        message={`Logging ${pendingFormData ? parseInt(pendingFormData.get('amount') as string).toLocaleString('en-US') : ''}ml at once may be unsafe. Drinking more than 1,000ml in a short period can cause hyponatremia. Are you sure?`}
         onConfirm={handleConfirmWarning}
         onCancel={() => {
           setShowWarning(false)

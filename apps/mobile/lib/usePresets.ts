@@ -7,21 +7,20 @@ export interface Preset {
   amount_ml: number
 }
 
-export function usePresets() {
+export function usePresets(userId: string | undefined) {
   const [presets, setPresets] = useState<Preset[]>([])
 
   const fetch = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!userId) return
 
     const { data } = await supabase
       .from('quick_presets')
       .select('id, label, amount_ml')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('sort_order', { ascending: true })
 
     setPresets(data ?? [])
-  }, [])
+  }, [userId])
 
   useEffect(() => { fetch() }, [fetch])
 

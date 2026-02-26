@@ -19,7 +19,7 @@ export async function getProfile() {
       return data
     },
     [`profile-${user.id}`],
-    { tags: [`profile-${user.id}`] }
+    { tags: [`profile-${user.id}`], revalidate: 300 }
   )()
 }
 
@@ -43,7 +43,7 @@ export async function getTodayLogs(timezone: string): Promise<WaterLog[]> {
       return data
     },
     [`logs-${user.id}`],
-    { tags: [`logs-${user.id}`] }
+    { tags: [`logs-${user.id}`], revalidate: 60 }
   )()
 }
 
@@ -109,7 +109,7 @@ export async function getStreak(goal: number, timezone: string): Promise<number>
       return streak
     },
     [`streak-${user.id}`],
-    { tags: [`logs-${user.id}`] }
+    { tags: [`logs-${user.id}`], revalidate: 300 }
   )()
 }
 
@@ -170,7 +170,7 @@ export async function getTodayDiureticLogs(timezone: string): Promise<DiureticLo
       return data
     },
     [`diuretic-${user.id}`],
-    { tags: [`diuretic-${user.id}`] }
+    { tags: [`diuretic-${user.id}`], revalidate: 60 }
   )()
 }
 

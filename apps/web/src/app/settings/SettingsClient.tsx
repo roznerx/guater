@@ -151,7 +151,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-lg font-bold text-blue-deep dark:text-blue-light">
-                {recommended.toLocaleString()} ml / day
+                {recommended.toLocaleString('en-US')} ml / day
               </span>
               <button
                 type="button"

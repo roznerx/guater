@@ -62,7 +62,7 @@ export default async function HistoryPage() {
         {/* Summary stats */}
         <div className="grid grid-cols-3 gap-3">
           <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-deep dark:text-blue-light">{weeklyAverage.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-blue-deep dark:text-blue-light">{weeklyAverage.toLocaleString('en-US')}</div>
             <div className="text-xs font-semibold text-text-muted dark:text-dark-text-muted mt-1">ml / day avg</div>
             <div className="text-xs text-text-muted dark:text-dark-text-muted">last 7 days</div>
           </Card>
@@ -73,7 +73,7 @@ export default async function HistoryPage() {
           </Card>
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-deep dark:text-blue-light">
-              {bestDay.total > 0 ? bestDay.total.toLocaleString() : '—'}
+              {bestDay.total > 0 ? bestDay.total.toLocaleString('en-US') : '—'}
             </div>
             <div className="text-xs font-semibold text-text-muted dark:text-dark-text-muted mt-1">best day</div>
             <div className="text-xs text-text-muted dark:text-dark-text-muted">
@@ -106,7 +106,7 @@ export default async function HistoryPage() {
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-blue-core dark:text-blue-light">
-                        {total.toLocaleString()} ml
+                        {total.toLocaleString('en-US')} ml
                       </span>
                       {reached && (
                         <span className="text-xs font-semibold bg-teal-light dark:bg-dark-card border-2 border-teal-deep text-teal-deep px-2 py-0.5 rounded-full">
@@ -146,7 +146,7 @@ export default async function HistoryPage() {
               return (
                 <div
                   key={key}
-                  title={`${formatDate(key)}: ${total.toLocaleString()}ml`}
+                  title={`${formatDate(key)}: ${total.toLocaleString('en-US')}ml`}
                   className={`
                     aspect-square rounded-md border-2 transition-all
                     ${bgColor}
