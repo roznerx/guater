@@ -1,10 +1,11 @@
 import { getProfile, getPresets, getDiureticPresets } from '@/lib/water'
-import { Card, Button } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
 import { logout } from '@/app/(auth)/actions'
 import PresetsManager from '@/components/water/PresetsManager'
 import DiureticPresetsManager from '@/components/water/diuretics/DiureticPresetsManager'
 import SettingsClient from './SettingsClient'
+import Button from '@/components/ui/Button'
+import Card from '@/components/ui/Card'
 
 export default async function SettingsPage() {
   const [profile, presets, diureticPresets] = await Promise.all([

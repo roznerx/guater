@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { addDiureticPreset, deleteDiureticPreset } from '@/app/actions'
-import { Button } from '@/components/ui'
 import type { DiureticPreset } from '@guater/types'
+import Button from '@/components/ui/Button'
 
 const PALETTE = [
   { label: 'Blue Pale',  value: '#C8DCEE' },

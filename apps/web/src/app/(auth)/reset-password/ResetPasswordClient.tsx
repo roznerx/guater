@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui'
+import Button from '@/components/ui/Button'
 
 export default function ResetPasswordClient() {
   const [error, setError] = useState('')

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { logout } from '@/app/(auth)/actions'
-import { Button } from '@/components/ui'
+import Button from '@/components/ui/Button'
 import ThemeToggle from '@/components/ThemeToggle'
 
 interface NavbarProps {

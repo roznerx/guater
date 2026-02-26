@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { addPreset, deletePreset } from '@/app/actions'
-import { Button } from '@/components/ui'
+import Button from '@/components/ui/Button'
 
 interface Preset {
   id: string

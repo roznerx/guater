@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Button, ConfirmDialog } from '@/components/ui'
 import { logWater } from '@/app/actions'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import Button from '@/components/ui/Button'
 
 const SINGLE_ENTRY_WARNING_THRESHOLD = 1000
 

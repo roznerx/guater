@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
 import type { DiureticLog, DiureticPreset } from '@guater/types'
-import { logDiuretic, clearAllDiureticLogs } from '@/app/actions'
-import { ConfirmDialog } from '@/components/ui'
+import { logDiuretic } from '@/app/actions'
 import MinBottle from './MinBottle'
 
 const DEFAULT_PRESETS: Omit<DiureticPreset, 'id' | 'user_id' | 'sort_order'>[] = [
@@ -26,7 +25,6 @@ interface DiureticTrackerProps {
 
 export default function DiureticTracker({ logs, presets }: DiureticTrackerProps) {
   const [isPending, startTransition] = useTransition()
-  const [showConfirm, setShowConfirm] = useState(false)
 
   const activePresets = presets.length > 0
     ? [...DEFAULT_PRESETS, ...presets]

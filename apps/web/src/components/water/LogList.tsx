@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { WaterLog, DiureticLog } from '@guater/types'
 import { deleteLog, clearAllLogs, editLog, clearAllDiureticLogs } from '@/app/actions'
 import { deleteDiureticLog } from '@/app/actions'
-import { ConfirmDialog } from '@/components/ui'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 interface LogListProps {
   logs: WaterLog[]

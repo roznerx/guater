@@ -1,8 +1,14 @@
 import { getProfile, getTodayLogs, getStreak, getPresets, getTodayDiureticLogs, getDiureticPresets } from '@/lib/water'
-import { WaterBottle, ProgressBar, QuickAdd, LogList, StreakBadge, DailyWarningBanner } from '@/components/water'
-import { DiureticTracker, DiureticWarningBanner } from '@/components/water/diuretics'
-import { Card } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
+import Card from '@/components/ui/Card'
+import DailyWarningBanner from '@/components/water/DailyWarningBanner'
+import DiureticTracker from '@/components/water/diuretics/DiureticTracker'
+import DiureticWarningBanner from '@/components/water/diuretics/DiureticWarningBanner'
+import LogList from '@/components/water/LogList'
+import ProgressBar from '@/components/water/ProgressBar'
+import QuickAdd from '@/components/water/QuickAdd'
+import StreakBadge from '@/components/water/StreakBadge'
+import WaterBottle from '@/components/water/WaterBottle'
 
 export default async function DashboardPage() {
   const profile = await getProfile()

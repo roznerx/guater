@@ -18,9 +18,10 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@guater/types": ["../../packages/types/src/index.ts"]
+      "@/*": ["src/*"],
+      "@guater/types": ["../../packages/types/src"]
     }
   },
   "include": [

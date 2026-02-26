@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { updateProfile } from '@/app/actions'
 import { calculateRecommendedIntake } from '@/lib/hydration'
-import { Button, Input, Toast } from '@/components/ui'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
+import Toast from '@/components/ui/Toast'
 
 interface Profile {
   display_name?: string

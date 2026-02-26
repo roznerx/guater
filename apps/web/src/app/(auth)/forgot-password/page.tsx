@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requestPasswordReset } from '../actions'
-import { Button, Input } from '@/components/ui'
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 export default async function ForgotPasswordPage({
   searchParams,

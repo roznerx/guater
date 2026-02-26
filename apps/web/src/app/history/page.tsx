@@ -1,7 +1,7 @@
 import { getProfile, getMonthlyLogs } from '@/lib/water'
-import { Card } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
 import { WaterLog } from '@guater/types'
+import Card from '@/components/ui/Card'
 
 function groupByDay(logs: Pick<WaterLog, 'logged_at' | 'amount_ml'>[], timezone: string): Record<string, number> {
   return logs.reduce((acc, log) => {

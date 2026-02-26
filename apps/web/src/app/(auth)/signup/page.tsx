@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { signup } from '../actions'
-import { Button, Input } from '@/components/ui'
+import Input from '@/components/ui/Input'
+import Button from '@/components/ui/Button'
 
 export default async function SignupPage({
   searchParams,
