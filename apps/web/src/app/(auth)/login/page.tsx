@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { login } from '../actions'
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { login } from '@/app/actions/auth-actions'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
 
 export default async function LoginPage({
   searchParams,
@@ -22,13 +22,19 @@ export default async function LoginPage({
       </div>
 
       {error && (
-        <div className="border-2 border-status-error bg-white dark:bg-dark-card text-status-error text-sm px-4 py-3 rounded-xl">
+        <div
+          role="alert"
+          className="border-2 border-status-error bg-white dark:bg-dark-card text-status-error text-sm px-4 py-3 rounded-xl"
+        >
           {decodeURIComponent(error)}
         </div>
       )}
 
       {message && (
-        <div className="border-2 border-teal-core bg-white dark:bg-dark-card text-teal-deep text-sm px-4 py-3 rounded-xl">
+        <div
+          role="alert"
+          className="border-2 border-teal-core bg-white dark:bg-dark-card text-teal-deep text-sm px-4 py-3 rounded-xl"
+        >
           {decodeURIComponent(message)}
         </div>
       )}

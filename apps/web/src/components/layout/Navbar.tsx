@@ -1,14 +1,14 @@
 import Link from 'next/link'
-import { logout } from '@/app/(auth)/actions'
 import Button from '@/components/ui/Button'
-import ThemeToggle from '@/components/ThemeToggle'
+import ThemeToggle from '@/components/layout/ThemeToggle'
+import { logout } from '@/app/actions/logout'
 
 interface NavbarProps {
   displayName?: string
   theme?: 'light' | 'dark'
 }
 
-export default function Navbar({ displayName, theme = 'light' }: NavbarProps) {
+export default function Navbar({ displayName }: NavbarProps) {
   return (
     <nav className="flex justify-between items-center px-4 sm:px-6 py-3 bg-white dark:bg-dark-card border-b-2 border-blue-deep dark:border-dark-border shadow-[0_3px_0_#0D4F78]">
       <div className="flex items-center gap-3">
@@ -23,7 +23,7 @@ export default function Navbar({ displayName, theme = 'light' }: NavbarProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <ThemeToggle currentTheme={theme} />
+        <ThemeToggle />
         <Link href="/history">
           <Button variant="secondary" className="text-xs py-1.5 px-3">
             History

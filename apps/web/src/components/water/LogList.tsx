@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import type { WaterLog, DiureticLog } from '@guater/types'
-import { deleteLog, clearAllLogs, editLog, clearAllDiureticLogs } from '@/app/actions'
-import { deleteDiureticLog } from '@/app/actions'
+import { deleteLog, clearAllLogs, editLog, clearAllDiureticLogs, deleteDiureticLog } from '@/app/actions'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import Button from '@/components/ui/Button'
 
 interface LogListProps {
   logs: WaterLog[]
@@ -22,29 +22,41 @@ type UnifiedEntry =
   | { type: 'water'; log: WaterLog }
   | { type: 'diuretic'; log: DiureticLog }
 
+const inlineInputClass = `
+  w-20 border-2 border-blue-deep rounded-lg px-2 py-1
+  text-sm font-semibold text-text-primary outline-none bg-white
+  shadow-[2px_2px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78]
+  focus:translate-x-0.5 focus:translate-y-0.5 transition-all
+  disabled:opacity-50
+`
+
 function WaterItem({ log }: { log: WaterLog }) {
-  const [deleting, setDeleting] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editValue, setEditValue] = useState(String(log.amount_ml))
-  const [saving, setSaving] = useState(false)
+  const [isDeleting, startDeleteTransition] = useTransition()
+  const [isSaving, startSaveTransition] = useTransition()
 
-  async function handleDelete() {
-    if (deleting) return
-    setDeleting(true)
-    await deleteLog(log.id)
+  function handleDelete() {
+    startDeleteTransition(async () => {
+      await deleteLog(log.id)
+    })
   }
 
-  async function handleSave() {
+  function handleSave() {
     const amount = parseInt(editValue)
     if (!amount || amount <= 0 || amount === log.amount_ml) {
       setEditing(false)
       setEditValue(String(log.amount_ml))
       return
     }
-    setSaving(true)
-    await editLog(log.id, amount)
-    setSaving(false)
-    setEditing(false)
+    startSaveTransition(async () => {
+      try {
+        await editLog(log.id, amount)
+        setEditing(false)
+      } catch {
+        setEditValue(String(log.amount_ml))
+      }
+    })
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -55,10 +67,15 @@ function WaterItem({ log }: { log: WaterLog }) {
     }
   }
 
+  function handleCancelEdit() {
+    setEditing(false)
+    setEditValue(String(log.amount_ml))
+  }
+
   return (
-    <div className={`flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border dark:border-dark-border bg-surface dark:bg-dark-surface transition-opacity ${deleting ? 'opacity-40' : ''}`}>
+    <div className={`flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border dark:border-dark-border bg-surface dark:bg-dark-surface transition-opacity ${isDeleting ? 'opacity-40' : ''}`}>
       <div className="flex items-center gap-3">
-        <div className="w-7 h-7 rounded-full bg-blue-pale dark:bg-dark-card border-2 border-blue-deep flex items-center justify-center text-xs font-bold text-blue-deep dark:text-blue-light flex-shrink-0">
+        <div aria-hidden="true" className="w-7 h-7 rounded-full bg-blue-pale dark:bg-dark-card border-2 border-blue-deep flex items-center justify-center text-xs flex-shrink-0">
           💧
         </div>
         {editing ? (
@@ -71,19 +88,32 @@ function WaterItem({ log }: { log: WaterLog }) {
               onChange={(e) => setEditValue(e.target.value)}
               onKeyDown={handleKeyDown}
               autoFocus
-              disabled={saving}
-              className="w-20 border-2 border-blue-deep rounded-lg px-2 py-1 text-sm font-semibold text-text-primary outline-none bg-white shadow-[2px_2px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all"
+              disabled={isSaving}
+              className={inlineInputClass}
             />
             <span className="text-sm text-text-muted font-medium">ml</span>
-            <button onClick={handleSave} disabled={saving} className="text-xs font-semibold text-teal-core hover:text-teal-deep transition-colors cursor-pointer disabled:opacity-50">
-              {saving ? '…' : 'Save'}
-            </button>
-            <button onClick={() => { setEditing(false); setEditValue(String(log.amount_ml)) }} disabled={saving} className="text-xs font-semibold text-text-muted hover:text-text-primary transition-colors cursor-pointer disabled:opacity-50">
+            <Button
+              variant="ghost"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="text-xs text-teal-core hover:text-teal-deep px-1 py-0.5"
+            >
+              {isSaving ? '…' : 'Save'}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleCancelEdit}
+              disabled={isSaving}
+              className="text-xs px-1 py-0.5"
+            >
               Cancel
-            </button>
+            </Button>
           </div>
         ) : (
-          <button onClick={() => setEditing(true)} className="font-semibold text-text-primary dark:text-dark-text-primary hover:text-blue-core transition-colors cursor-pointer">
+          <button
+            onClick={() => setEditing(true)}
+            className="font-semibold text-text-primary dark:text-dark-text-primary hover:text-blue-core transition-colors cursor-pointer"
+          >
             {log.amount_ml} ml
           </button>
         )}
@@ -94,9 +124,11 @@ function WaterItem({ log }: { log: WaterLog }) {
             {formatTime(log.logged_at)}
           </span>
           <button
+            type="button"
             onClick={handleDelete}
-            disabled={deleting}
-            className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+            disabled={isDeleting}
+            aria-label={`Delete ${log.amount_ml}ml entry`}
+            className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           >
             ✕
           </button>
@@ -107,18 +139,18 @@ function WaterItem({ log }: { log: WaterLog }) {
 }
 
 function DiureticItem({ log }: { log: DiureticLog }) {
-  const [deleting, setDeleting] = useState(false)
+  const [isDeleting, startDeleteTransition] = useTransition()
 
-  async function handleDelete() {
-    if (deleting) return
-    setDeleting(true)
-    await deleteDiureticLog(log.id)
+  function handleDelete() {
+    startDeleteTransition(async () => {
+      await deleteDiureticLog(log.id)
+    })
   }
 
   return (
-    <div className={`flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border dark:border-dark-border bg-surface dark:bg-dark-surface transition-opacity ${deleting ? 'opacity-40' : ''}`}>
+    <div className={`flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border dark:border-dark-border bg-surface dark:bg-dark-surface transition-opacity ${isDeleting ? 'opacity-40' : ''}`}>
       <div className="flex items-center gap-3">
-        <div className="w-7 h-7 rounded-full bg-slate-soft dark:bg-dark-card border-2 border-slate-mid flex items-center justify-center text-xs font-bold text-slate-deep flex-shrink-0">
+        <div aria-hidden="true" className="w-7 h-7 rounded-full bg-slate-soft dark:bg-dark-card border-2 border-slate-mid flex items-center justify-center text-xs flex-shrink-0">
           ☕
         </div>
         <span className="font-semibold text-text-primary dark:text-dark-text-primary">
@@ -136,9 +168,11 @@ function DiureticItem({ log }: { log: DiureticLog }) {
           {formatTime(log.logged_at)}
         </span>
         <button
+          type="button"
           onClick={handleDelete}
-          disabled={deleting}
-          className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+          disabled={isDeleting}
+          aria-label={`Delete ${log.amount_ml}ml entry`}
+          className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
           ✕
         </button>
@@ -150,7 +184,6 @@ function DiureticItem({ log }: { log: DiureticLog }) {
 export default function LogList({ logs, diureticLogs }: LogListProps) {
   const [showConfirm, setShowConfirm] = useState(false)
 
-  // Merge and sort by time descending
   const unified: UnifiedEntry[] = [
     ...logs.map(log => ({ type: 'water' as const, log })),
     ...diureticLogs.map(log => ({ type: 'diuretic' as const, log })),
@@ -159,18 +192,18 @@ export default function LogList({ logs, diureticLogs }: LogListProps) {
   )
 
   const isEmpty = unified.length === 0
+  const hasAnyLogs = logs.length > 0 || diureticLogs.length > 0
 
   return (
     <div>
       <ConfirmDialog
         isOpen={showConfirm}
-        title="Clear all water logs?"
-        message="This will delete all water entries for today. This cannot be undone."
-       onConfirm={async () => {
-        await Promise.all([clearAllLogs(), clearAllDiureticLogs()])
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        setShowConfirm(false)
-      }}
+        title="Clear all logs?"
+        message="This will delete all water and diuretic entries for today. This cannot be undone."
+        onConfirm={async () => {
+          await Promise.all([clearAllLogs(), clearAllDiureticLogs()])
+          setShowConfirm(false)
+        }}
         onCancel={() => setShowConfirm(false)}
       />
 
@@ -178,7 +211,7 @@ export default function LogList({ logs, diureticLogs }: LogListProps) {
         <div className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted">
           Today&apos;s log
         </div>
-        {logs.length > 0 && (
+        {hasAnyLogs && (
           <button
             type="button"
             onClick={() => setShowConfirm(true)}

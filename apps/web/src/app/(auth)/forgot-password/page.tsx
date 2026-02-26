@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { requestPasswordReset } from '../actions'
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { forgotPassword } from '@/app/actions/auth-actions'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
 
 export default async function ForgotPasswordPage({
   searchParams,
@@ -22,18 +22,24 @@ export default async function ForgotPasswordPage({
       </div>
 
       {error && (
-        <div className="border-2 border-status-error bg-white dark:bg-dark-card text-status-error text-sm px-4 py-3 rounded-xl">
+        <div
+          role="alert"
+          className="border-2 border-status-error bg-white dark:bg-dark-card text-status-error text-sm px-4 py-3 rounded-xl"
+        >
           {decodeURIComponent(error)}
         </div>
       )}
 
       {message && (
-        <div className="border-2 border-teal-core bg-white dark:bg-dark-card text-teal-deep text-sm px-4 py-3 rounded-xl">
+        <div
+          role="alert"
+          className="border-2 border-teal-core bg-white dark:bg-dark-card text-teal-deep text-sm px-4 py-3 rounded-xl"
+        >
           {decodeURIComponent(message)}
         </div>
       )}
 
-      <form action={requestPasswordReset} className="flex flex-col gap-4">
+      <form action={forgotPassword} className="flex flex-col gap-4">
         <Input
           id="email"
           name="email"
