@@ -10,27 +10,29 @@ export interface Profile {
   theme: string | null
 }
 
-export function useProfile() {
+export function useProfile(userId: string | undefined) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetch() {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      console.log('user:', user?.id, 'error:', error)
-      if (!user) return
+    if (!userId) {
+      setLoading(false)
+      return
+    }
 
+    async function fetch() {
       const { data } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single()
 
       setProfile(data)
       setLoading(false)
     }
+
     fetch()
-  }, [])
+  }, [userId])
 
   return { profile, loading }
 }

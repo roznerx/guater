@@ -19,10 +19,12 @@ export default function Button({
   fullWidth = false,
   className = '',
   children,
+  type = 'button',
   ...props
 }: ButtonProps) {
   return (
     <button
+      type={type}
       className={`
         font-semibold rounded-xl px-4 py-2.5 text-sm
         border-2 transition-all cursor-pointer

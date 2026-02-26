@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getTodayRangeForTimezone } from '@/lib/utils'
 
@@ -19,6 +19,7 @@ export async function logWater(formData: FormData) {
   })
 
   revalidatePath('/')
+  revalidateTag(`logs-${user.id}`, 'default')
 }
 
 export async function deleteLog(id: string) {
@@ -33,6 +34,7 @@ export async function deleteLog(id: string) {
     .eq('user_id', user.id)
 
   revalidatePath('/')
+  revalidateTag(`logs-${user.id}`, 'default')
 }
 
 export async function updateProfile(formData: FormData) {
@@ -59,6 +61,7 @@ export async function updateProfile(formData: FormData) {
 
   revalidatePath('/')
   revalidatePath('/settings', 'layout')
+  revalidateTag(`profile-${user.id}`, 'default')
 }
 
 export async function clearAllLogs() {
@@ -83,6 +86,7 @@ export async function clearAllLogs() {
     .lt('logged_at', end)
 
   revalidatePath('/')
+  revalidateTag(`logs-${user.id}`, 'default')
 }
 
 export async function addPreset(formData: FormData) {
@@ -140,6 +144,7 @@ export async function editLog(id: string, amount: number) {
     .eq('user_id', user.id)
 
   revalidatePath('/')
+  revalidateTag(`logs-${user.id}`, 'default')
 }
 
 export async function updateTheme(theme: 'light' | 'dark') {
@@ -151,6 +156,8 @@ export async function updateTheme(theme: 'light' | 'dark') {
     .from('profiles')
     .update({ theme })
     .eq('id', user.id)
+
+  revalidateTag(`profile-${user.id}`, 'default')
 }
 
 export async function logDiuretic(formData: FormData) {
@@ -167,6 +174,7 @@ export async function logDiuretic(formData: FormData) {
   })
 
   revalidatePath('/')
+  revalidateTag(`diuretic-${user.id}`, 'default')
 }
 
 export async function deleteDiureticLog(id: string) {
@@ -181,6 +189,7 @@ export async function deleteDiureticLog(id: string) {
     .eq('user_id', user.id)
 
   revalidatePath('/')
+  revalidateTag(`diuretic-${user.id}`, 'default')
 }
 
 export async function addDiureticPreset(formData: FormData) {
@@ -247,4 +256,5 @@ export async function clearAllDiureticLogs() {
     .lt('logged_at', end)
 
   revalidatePath('/')
+  revalidateTag(`diuretic-${user.id}`, 'default')
 }

@@ -1,16 +1,18 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useAuth } from '@/lib/AuthContext'
 import { useProfile } from '@/lib/useProfile'
-import { DiureticLog, useTodayLogs } from '@/lib/useTodayLogs'
+import { useTodayLogs, DiureticLog } from '@/lib/useTodayLogs'
 import { usePresets } from '@/lib/usePresets'
 import { supabase } from '@/lib/supabase'
 
 export default function DashboardScreen() {
-  const { profile, loading: profileLoading } = useProfile()
+  const { user } = useAuth()
+  const { profile, loading: profileLoading } = useProfile(user?.id)
   const timezone = profile?.timezone ?? 'UTC'
   const goal = profile?.daily_goal_ml ?? 2500
-  const { waterLogs, diureticLogs, loading: logsLoading, refresh } = useTodayLogs(timezone)
-  const { presets } = usePresets()
+  const { waterLogs, diureticLogs, loading: logsLoading, refresh } = useTodayLogs(user?.id, timezone)
+  const { presets } = usePresets(user?.id)
 
   const consumed = waterLogs.reduce((sum, log) => sum + log.amount_ml, 0)
   const percentage = Math.min(Math.round((consumed / goal) * 100), 100)
@@ -20,22 +22,22 @@ export default function DashboardScreen() {
   const DEFAULT_AMOUNTS = [250, 500, 750]
 
   async function handleQuickAdd(amount: number) {
-    const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    await supabase.from('water_logs').insert({
+    const { error } = await supabase.from('water_logs').insert({
       user_id: user.id,
       amount_ml: amount,
       source: 'quick',
     })
 
+    console.log('insert error:', error)
     refresh()
   }
 
-  if (profileLoading || logsLoading) {
+  if (profileLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-surface dark:bg-dark-surface">
-       { <ActivityIndicator color="#1A6FA0" />}
+        <ActivityIndicator color="#1A6FA0" />
       </SafeAreaView>
     )
   }
@@ -68,7 +70,6 @@ export default function DashboardScreen() {
             </Text>
           </View>
 
-          {/* Progress bar */}
           <View className="h-4 bg-slate-soft dark:bg-dark-surface rounded-full border-2 border-blue-deep overflow-hidden">
             <View
               className="h-full rounded-full bg-blue-core"

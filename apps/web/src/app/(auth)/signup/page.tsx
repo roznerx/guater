@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { signup } from '../actions'
-import { Button, Input } from '@/components/ui'
+import Input from '@/components/ui/Input'
+import Button from '@/components/ui/Button'
+import { signup } from '@/app/actions/auth-actions'
 
 export default async function SignupPage({
   searchParams,
@@ -21,7 +22,10 @@ export default async function SignupPage({
       </div>
 
       {error && (
-        <div className="border-2 border-status-error bg-white dark:bg-dark-card text-status-error text-sm px-4 py-3 rounded-xl">
+        <div
+          role="alert"
+          className="border-2 border-status-error bg-white dark:bg-dark-card text-status-error text-sm px-4 py-3 rounded-xl"
+        >
           {decodeURIComponent(error)}
         </div>
       )}
