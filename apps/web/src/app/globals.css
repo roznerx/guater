@@ -1,6 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
-
 @import "tailwindcss";
+
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -10,45 +9,38 @@
   --color-blue-mid:   #3E8FC0;
   --color-blue-core:  #1A6FA0;
   --color-blue-deep:  #0D4F78;
-
   /* Teals */
   --color-teal-light: #8DCFCA;
   --color-teal-core:  #2AABA2;
   --color-teal-deep:  #1A7A74;
-
   /* Neutrals */
   --color-surface:    #F4F8FB;
   --color-border:     #DDE8F0;
   --color-slate-soft: #E8EEF4;
   --color-slate-mid:  #94A8BA;
   --color-slate-deep: #4A6070;
-
-  /* Dark mode surface colors */
-  --color-dark-surface: #0F1E2A;
-  --color-dark-card: #152433;
-  --color-dark-border: #1E3448;
-  --color-dark-text-primary: #E8F0F7;
+  /* Dark mode */
+  --color-dark-surface:        #0F1E2A;
+  --color-dark-card:           #152433;
+  --color-dark-border:         #1E3448;
+  --color-dark-text-primary:   #E8F0F7;
   --color-dark-text-secondary: #94A8BA;
-  --color-dark-text-muted: #4A6070;
-
+  --color-dark-text-muted:     #4A6070;
   /* Text */
   --color-text-primary:   #0F2A3A;
   --color-text-secondary: #4A6070;
   --color-text-muted:     #94A8BA;
-
   /* Status */
   --color-status-success: #2AABA2;
   --color-status-warning: #E8A230;
   --color-status-error:   #D95F5F;
-
   /* Font */
   --font-sans: 'Fredoka', system-ui, sans-serif;
 }
 
 @layer base {
   body {
-    background-color: #F4F8FB;
-    color: #0F2A3A;
-    font-family: 'Fredoka', system-ui, sans-serif;
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
   }
 }

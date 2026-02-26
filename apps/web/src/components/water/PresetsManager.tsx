@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { addPreset, deletePreset } from '@/app/actions'
-import { Button } from '@/components/ui'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
 
 interface Preset {
   id: string
@@ -16,17 +17,25 @@ interface PresetsManagerProps {
 
 export default function PresetsManager({ presets }: PresetsManagerProps) {
   const [adding, setAdding] = useState(false)
-  const [pending, setPending] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
-  async function handleAdd(formData: FormData) {
-    setPending(true)
-    await addPreset(formData)
-    setPending(false)
-    setAdding(false)
+  function handleAdd(formData: FormData) {
+    startTransition(async () => {
+      await addPreset(formData)
+      setAdding(false)
+    })
   }
 
-  async function handleDelete(id: string) {
-    await deletePreset(id)
+  function handleDelete(id: string) {
+    setDeletingId(id)
+    startTransition(async () => {
+      try {
+        await deletePreset(id)
+      } finally {
+        setDeletingId(null)
+      }
+    })
   }
 
   return (
@@ -35,7 +44,6 @@ export default function PresetsManager({ presets }: PresetsManagerProps) {
         Quick add containers
       </div>
 
-      {/* Existing presets */}
       <div className="flex flex-col gap-2 mb-4">
         {presets.length === 0 && (
           <p className="text-sm text-text-muted">
@@ -55,9 +63,13 @@ export default function PresetsManager({ presets }: PresetsManagerProps) {
                 {preset.amount_ml} ml
               </span>
             </div>
+
             <button
+              type="button"
               onClick={() => handleDelete(preset.id)}
-              className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer"
+              disabled={deletingId === preset.id}
+              aria-label={`Delete ${preset.label}`}
+              className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
               ✕
             </button>
@@ -69,57 +81,45 @@ export default function PresetsManager({ presets }: PresetsManagerProps) {
       {adding ? (
         <form action={handleAdd} className="flex flex-col gap-3">
           <div className="flex gap-2">
-            <div className="flex flex-col gap-1.5 flex-1">
-              <label className="text-xs font-semibold text-text-muted uppercase tracking-widest">
-                Name
-              </label>
-              <input
+            <div className="flex-1">
+              <Input
                 name="label"
                 type="text"
                 required
+                label="Name"
                 placeholder="e.g. Contigo"
-                className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all"
+                disabled={isPending}
               />
             </div>
-            <div className="flex flex-col gap-1.5 w-28">
-              <label className="text-xs font-semibold text-text-muted uppercase tracking-widest">
-                Amount
-              </label>
-              <input
+            <div className="w-28">
+              <Input
                 name="amount_ml"
                 type="number"
                 required
                 min={1}
                 max={5000}
+                label="Amount"
                 placeholder="591"
-                className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none bg-white shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all"
+                disabled={isPending}
               />
             </div>
           </div>
           <div className="flex gap-2">
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={pending}
-              className="disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {pending ? 'Saving…' : 'Save'}
+            <Button type="submit" variant="primary" disabled={isPending}>
+              {isPending ? 'Saving…' : 'Save'}
             </Button>
             <Button
               type="button"
               variant="ghost"
               onClick={() => setAdding(false)}
-              disabled={pending}
+              disabled={isPending}
             >
               Cancel
             </Button>
           </div>
         </form>
       ) : (
-        <Button
-          variant="secondary"
-          onClick={() => setAdding(true)}
-        >
+        <Button variant="secondary" onClick={() => setAdding(true)}>
           + Add container
         </Button>
       )}

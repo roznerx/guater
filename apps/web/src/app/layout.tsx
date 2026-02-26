@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { Fredoka } from 'next/font/google'
 import './globals.css'
-import { getProfile } from '@/lib/water'
-import ThemeProvider from '@/components/ThemeProvider'
-import RefreshOnFocus from '@/components/RefreshOnFocus'
+import ThemeProvider from '@/components/layout/ThemeProvider'
+import RefreshOnFocus from '@/components/layout/RefreshOnFocus'
+import { getProfile } from '@/lib/supabase/queries/profile'
 
 const fredoka = Fredoka({
   subsets: ['latin'],
@@ -25,7 +25,7 @@ export default async function RootLayout({
   const theme = (profile?.theme ?? 'light') as 'light' | 'dark'
 
   return (
-    <html lang="en" className={fredoka.variable}>
+    <html lang="en" className={`${fredoka.variable} ${theme === 'dark' ? 'dark' : ''}`}>
       <body className="font-sans">
         <ThemeProvider theme={theme}>
           <RefreshOnFocus />

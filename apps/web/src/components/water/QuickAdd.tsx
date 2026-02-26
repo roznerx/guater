@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Button, ConfirmDialog } from '@/components/ui'
 import { logWater } from '@/app/actions'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
 
 const SINGLE_ENTRY_WARNING_THRESHOLD = 1000
 
@@ -26,21 +28,11 @@ export default function QuickAdd({ presets }: QuickAddProps) {
   const [customAmount, setCustomAmount] = useState('')
   const [isPending, startTransition] = useTransition()
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
-  const [showWarning, setShowWarning] = useState(false)
+  const [warningAmount, setWarningAmount] = useState<number | null>(null)
 
-  const activePresets = presets.length > 0
-    ? [...presets, ...DEFAULT_PRESETS]
-    : DEFAULT_PRESETS
+  const activePresets = [...presets, ...DEFAULT_PRESETS]
 
-  async function handleLogWater(formData: FormData) {
-    const amount = parseInt(formData.get('amount') as string)
-
-    if (amount >= SINGLE_ENTRY_WARNING_THRESHOLD) {
-      setPendingFormData(formData)
-      setShowWarning(true)
-      return
-    }
-
+  function submitLog(formData: FormData) {
     startTransition(async () => {
       await logWater(formData)
       setCustomAmount('')
@@ -48,29 +40,39 @@ export default function QuickAdd({ presets }: QuickAddProps) {
     })
   }
 
-  async function handleConfirmWarning() {
+  function handleLogWater(formData: FormData) {
+    const amount = parseInt(formData.get('amount') as string)
+
+    if (amount >= SINGLE_ENTRY_WARNING_THRESHOLD) {
+      setPendingFormData(formData)
+      setWarningAmount(amount)
+      return
+    }
+
+    submitLog(formData)
+  }
+
+  function handleConfirmWarning() {
     if (!pendingFormData) return
-    setShowWarning(false)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    startTransition(async () => {
-      await logWater(pendingFormData)
-      setCustomAmount('')
-      setShowCustom(false)
-      setPendingFormData(null)
-    })
+    const formData = pendingFormData
+    setPendingFormData(null)
+    setWarningAmount(null)
+    submitLog(formData)
+  }
+
+  function handleCancelWarning() {
+    setPendingFormData(null)
+    setWarningAmount(null)
   }
 
   return (
     <div>
       <ConfirmDialog
-        isOpen={showWarning}
+        isOpen={warningAmount !== null}
         title="Large amount detected"
-        message={`Logging ${pendingFormData ? parseInt(pendingFormData.get('amount') as string).toLocaleString('en-US') : ''}ml at once may be unsafe. Drinking more than 1,000ml in a short period can cause hyponatremia. Are you sure?`}
+        message={`Logging ${warningAmount?.toLocaleString('en-US')}ml at once may be unsafe. Drinking more than 1,000ml in a short period can cause hyponatremia. Are you sure?`}
         onConfirm={handleConfirmWarning}
-        onCancel={() => {
-          setShowWarning(false)
-          setPendingFormData(null)
-        }}
+        onCancel={handleCancelWarning}
         confirmLabel="Yes, log it"
         confirmVariant="primary"
       />
@@ -83,12 +85,7 @@ export default function QuickAdd({ presets }: QuickAddProps) {
         {activePresets.map((preset) => (
           <form key={preset.id} action={handleLogWater}>
             <input type="hidden" name="amount" value={preset.amount_ml} />
-            <Button
-              type="submit"
-              variant="secondary"
-              disabled={isPending}
-              className="disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <Button type="submit" variant="secondary" disabled={isPending}>
               {preset.label}
             </Button>
           </form>
@@ -97,7 +94,6 @@ export default function QuickAdd({ presets }: QuickAddProps) {
           variant="teal"
           onClick={() => setShowCustom(!showCustom)}
           disabled={isPending}
-          className="disabled:opacity-50 disabled:cursor-not-allowed"
         >
           + Custom
         </Button>
@@ -105,30 +101,22 @@ export default function QuickAdd({ presets }: QuickAddProps) {
 
       {showCustom && (
         <form action={handleLogWater} className="mt-4 flex gap-2 items-end">
-          <div className="flex flex-col gap-1.5 flex-1">
-            <label htmlFor="custom-amount" className="text-xs font-semibold text-text-muted uppercase tracking-widest">
-              Amount (ml)
-            </label>
-            <input
+          <div className="flex-1">
+            <Input
               id="custom-amount"
               name="amount"
               type="number"
               min="1"
               max="5000"
               required
+              label="Amount (ml)"
+              placeholder="e.g. 350"
               value={customAmount}
               onChange={(e) => setCustomAmount(e.target.value)}
-              placeholder="e.g. 350"
               disabled={isPending}
-              className="border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm text-text-primary dark:text-dark-text-primary placeholder:text-text-muted outline-none bg-white dark:bg-dark-card shadow-[3px_3px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78] focus:translate-x-0.5 focus:translate-y-0.5 transition-all disabled:opacity-50"
             />
           </div>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isPending}
-            className="mb-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button type="submit" variant="primary" disabled={isPending} className="mb-0.5">
             Add
           </Button>
         </form>

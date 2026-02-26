@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { updateProfile } from '@/app/actions'
+import { useState, useTransition } from 'react'
+import { updateProfile } from '@/app/actions/profile'
 import { calculateRecommendedIntake } from '@/lib/hydration'
-import { Button, Input, Toast } from '@/components/ui'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
+import Toast from '@/components/ui/Toast'
 
 interface Profile {
   display_name?: string
@@ -33,30 +35,31 @@ const selectClass = `
 
 export default function SettingsClient({ profile }: SettingsClientProps) {
   const [showToast, setShowToast] = useState(false)
-  const [pending, setPending] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [weightKg, setWeightKg] = useState(profile?.weight_kg?.toString() ?? '')
   const [age, setAge] = useState(profile?.age?.toString() ?? '')
   const [activityLevel, setActivityLevel] = useState(profile?.activity_level ?? 'moderate')
   const [climate, setClimate] = useState(profile?.climate ?? 'temperate')
   const [dailyGoal, setDailyGoal] = useState(profile?.daily_goal_ml?.toString() ?? '2500')
 
-  const recommended = weightKg && age
+  const weight = parseFloat(weightKg)
+  const ageNum = parseInt(age)
+  const recommended = weightKg && age && weight > 0 && ageNum > 0
     ? calculateRecommendedIntake(
-        parseFloat(weightKg),
-        parseInt(age),
+        weight,
+        ageNum,
         activityLevel as 'sedentary' | 'moderate' | 'active' | 'very_active',
         climate as 'cold' | 'temperate' | 'hot'
       )
     : null
 
-  async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
+  function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (pending) return
-    setPending(true)
     const formData = new FormData(e.currentTarget)
-    await updateProfile(formData)
-    setPending(false)
-    setShowToast(true)
+    startTransition(async () => {
+      await updateProfile(formData)
+      setShowToast(true)
+    })
   }
 
   return (
@@ -77,7 +80,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
           label="Name"
           defaultValue={profile?.display_name ?? ''}
           placeholder="Your name"
-          disabled={pending}
+          disabled={isPending}
         />
 
         <div className="grid grid-cols-2 gap-3">
@@ -91,7 +94,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             placeholder="70"
             min={20}
             max={300}
-            disabled={pending}
+            disabled={isPending}
           />
           <Input
             id="age"
@@ -103,7 +106,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             placeholder="30"
             min={10}
             max={120}
-            disabled={pending}
+            disabled={isPending}
           />
         </div>
 
@@ -116,7 +119,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             name="activity_level"
             value={activityLevel}
             onChange={(e) => setActivityLevel(e.target.value)}
-            disabled={pending}
+            disabled={isPending}
             className={selectClass}
           >
             <option value="sedentary">Sedentary — mostly sitting</option>
@@ -135,7 +138,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             name="climate"
             value={climate}
             onChange={(e) => setClimate(e.target.value)}
-            disabled={pending}
+            disabled={isPending}
             className={selectClass}
           >
             <option value="cold">Cold</option>
@@ -156,7 +159,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
               <button
                 type="button"
                 onClick={() => setDailyGoal(String(recommended))}
-                disabled={pending}
+                disabled={isPending}
                 className="text-xs font-semibold text-blue-core hover:text-blue-deep transition-colors cursor-pointer disabled:opacity-50"
               >
                 Use this →
@@ -175,7 +178,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
           placeholder="2500"
           min={100}
           max={10000}
-          disabled={pending}
+          disabled={isPending}
         />
 
         <div className="flex flex-col gap-1.5">
@@ -186,7 +189,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             id="preferred_unit"
             name="preferred_unit"
             defaultValue={profile?.preferred_unit ?? 'ml'}
-            disabled={pending}
+            disabled={isPending}
             className={selectClass}
           >
             <option value="ml">ml</option>
@@ -202,7 +205,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
             id="timezone"
             name="timezone"
             defaultValue={profile?.timezone ?? 'UTC'}
-            disabled={pending}
+            disabled={isPending}
             className={selectClass}
           >
             <option value="UTC">UTC</option>
@@ -216,14 +219,8 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
           </select>
         </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          fullWidth
-          disabled={pending}
-          className="disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {pending ? 'Saving…' : 'Save changes'}
+        <Button type="submit" variant="primary" fullWidth disabled={isPending}>
+          {isPending ? 'Saving…' : 'Save changes'}
         </Button>
       </form>
     </>

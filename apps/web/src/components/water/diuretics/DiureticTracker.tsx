@@ -1,12 +1,13 @@
-'use client'
+"use client"
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
 import type { DiureticLog, DiureticPreset } from '@guater/types'
-import { logDiuretic, clearAllDiureticLogs } from '@/app/actions'
-import { ConfirmDialog } from '@/components/ui'
+import { logDiuretic } from '@/app/actions'
 import MinBottle from './MinBottle'
 
-const DEFAULT_PRESETS: Omit<DiureticPreset, 'id' | 'user_id' | 'sort_order'>[] = [
+type AnyPreset = Omit<DiureticPreset, 'id' | 'user_id' | 'sort_order'> & { id?: string }
+
+const DEFAULT_PRESETS: AnyPreset[] = [
   { label: 'Coffee',    amount_ml: 250, diuretic_factor: 0.40, color: '#4A6070' },
   { label: 'Espresso',  amount_ml: 60,  diuretic_factor: 0.50, color: '#0D4F78' },
   { label: 'Black tea', amount_ml: 250, diuretic_factor: 0.25, color: '#E8A230' },
@@ -26,22 +27,19 @@ interface DiureticTrackerProps {
 
 export default function DiureticTracker({ logs, presets }: DiureticTrackerProps) {
   const [isPending, startTransition] = useTransition()
-  const [showConfirm, setShowConfirm] = useState(false)
 
-  const activePresets = presets.length > 0
-    ? [...DEFAULT_PRESETS, ...presets]
-    : DEFAULT_PRESETS
+  const activePresets: AnyPreset[] = [...DEFAULT_PRESETS, ...presets]
 
-  const totalNetLoss = logs.reduce((sum, log) => {
-    return sum + Math.round(log.amount_ml * log.diuretic_factor)
-  }, 0)
+  const totalNetLoss = logs.reduce((sum, log) =>
+    sum + Math.round(log.amount_ml * log.diuretic_factor), 0
+  )
 
-  async function handleLog(preset: typeof DEFAULT_PRESETS[0] & { id?: string }) {
+  function handleLog(preset: AnyPreset) {
     const formData = new FormData()
     formData.set('label', preset.label)
     formData.set('amount_ml', String(preset.amount_ml))
     formData.set('diuretic_factor', String(preset.diuretic_factor))
-    if ('id' in preset && preset.id) formData.set('preset_id', preset.id)
+    if (preset.id) formData.set('preset_id', preset.id)
 
     startTransition(async () => {
       await logDiuretic(formData)
@@ -50,34 +48,28 @@ export default function DiureticTracker({ logs, presets }: DiureticTrackerProps)
 
   return (
     <div>
-      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted">
           Diuretic drinks
         </div>
-        <div className="flex items-center gap-3">
-          {totalNetLoss > 0 && (
-            <div className="text-xs font-semibold text-status-error">
-              -{totalNetLoss} ml net loss
-            </div>
-          )}
-        </div>
+        {totalNetLoss > 0 && (
+          <div className="text-xs font-semibold text-status-error">
+            -{totalNetLoss} ml net loss
+          </div>
+        )}
       </div>
 
-      {/* Preset grid — 5 per row, fills full width */}
+      {/* Preset grid — 5 per row */}
       <div className="grid grid-cols-5 gap-3 mb-4">
-        {activePresets.map((preset, i) => (
+        {activePresets.map((preset) => (
           <button
-            key={'id' in preset ? (preset as DiureticPreset).id : i}
+            key={preset.id ?? preset.label}
             onClick={() => handleLog(preset)}
             disabled={isPending}
             className="flex flex-col items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-transform hover:-translate-y-1"
           >
             <div className="h-12 flex items-end justify-center">
-              <MinBottle
-                label={preset.label}
-                color={preset.color}
-              />
+              <MinBottle label={preset.label} color={preset.color} />
             </div>
             <span className="text-xs font-semibold text-text-primary dark:text-dark-text-primary text-center leading-tight">
               {preset.label}

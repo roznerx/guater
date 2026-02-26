@@ -1,10 +1,13 @@
-import { getProfile, getPresets, getDiureticPresets } from '@/lib/water'
-import { Card, Button } from '@/components/ui'
 import Navbar from '@/components/layout/Navbar'
-import { logout } from '@/app/(auth)/actions'
+import Card from '@/components/ui/Card'
+import Button from '@/components/ui/Button'
 import PresetsManager from '@/components/water/PresetsManager'
 import DiureticPresetsManager from '@/components/water/diuretics/DiureticPresetsManager'
 import SettingsClient from './SettingsClient'
+import { getProfile } from '@/lib/supabase/queries/profile'
+import { getPresets } from '@/lib/supabase/queries/presets'
+import { getDiureticPresets } from '@/lib/supabase/queries/diuretics'
+import { logout } from '@/app/actions/logout'
 
 export default async function SettingsPage() {
   const [profile, presets, diureticPresets] = await Promise.all([
@@ -13,18 +16,16 @@ export default async function SettingsPage() {
     getDiureticPresets(),
   ])
 
-  const theme = (profile?.theme ?? 'light') as 'light' | 'dark'
-
   return (
     <div className="min-h-screen bg-surface dark:bg-dark-surface">
-      <Navbar displayName={profile?.display_name ?? undefined} theme={theme} />
-
+      <Navbar displayName={profile?.display_name ?? undefined} />
       <main className="max-w-lg mx-auto px-6 py-8 flex flex-col gap-6">
-
-        <h2 className="text-xl font-bold text-text-secondary dark:text-dark-text-secondary">Settings</h2>
+        <h2 className="text-xl font-bold text-text-secondary dark:text-dark-text-secondary">
+          Settings
+        </h2>
 
         <Card>
-          <div className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-4">
+          <div className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted mb-4">
             Profile
           </div>
           <SettingsClient profile={profile} />
@@ -39,7 +40,7 @@ export default async function SettingsPage() {
         </Card>
 
         <Card>
-          <div className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-4">
+          <div className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted mb-4">
             Account
           </div>
           <form action={logout}>
@@ -48,7 +49,6 @@ export default async function SettingsPage() {
             </Button>
           </form>
         </Card>
-
       </main>
     </div>
   )

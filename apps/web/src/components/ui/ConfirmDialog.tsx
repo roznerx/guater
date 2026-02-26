@@ -1,12 +1,12 @@
 'use client'
-
 import React, { useState } from 'react'
+import Button from '@/components/ui/Button'
 
 interface ConfirmDialogProps {
   isOpen: boolean
   title: string
   message: string
-  onConfirm: () => Promise<void>
+  onConfirm: () => Promise<void> | void
   onCancel: () => void
   confirmLabel?: string
   confirmVariant?: 'danger' | 'primary'
@@ -25,53 +25,56 @@ export default function ConfirmDialog({
 
   async function handleConfirm() {
     setLoading(true)
-    await onConfirm()
-    setLoading(false)
+    try {
+      await onConfirm()
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!isOpen) return null
 
   return (
     <div>
+      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-blue-deep/40 z-40"
         onClick={() => { if (!loading) onCancel() }}
-      ></div>
-
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm px-6">
+      />
+      {/* Dialog */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        aria-describedby="confirm-message"
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm px-6"
+      >
         <div className="bg-white dark:bg-dark-card border-2 border-blue-deep dark:border-dark-border rounded-2xl shadow-[6px_6px_0_#0D4F78] overflow-hidden">
           <div className="p-6">
-            <h3 className="text-lg font-bold text-blue-deep dark:text-blue-light mb-2">
+            <h3 id="confirm-title" className="text-lg font-bold text-blue-deep dark:text-blue-light mb-2">
               {title}
             </h3>
-            <p className="text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-6">
+            <p id="confirm-message" className="text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-6">
               {message}
             </p>
-
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="ghost"
+                fullWidth
                 onClick={() => { if (!loading) onCancel() }}
                 disabled={loading}
-                className="flex-1 font-semibold rounded-xl px-4 py-2.5 text-sm border-2 border-border bg-white dark:bg-dark-card text-slate-deep dark:text-dark-text-secondary shadow-[3px_3px_0_#DDE8F0] hover:enabled:shadow-[1px_1px_0_#DDE8F0] hover:enabled:translate-x-0.5 hover:enabled:translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 No
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={confirmVariant === 'primary' ? 'primary' : 'ghost'}
+                fullWidth
                 onClick={handleConfirm}
                 disabled={loading}
-                className={`
-                  flex-1 font-semibold rounded-xl px-4 py-2.5 text-sm border-2 text-white
-                  shadow-[3px_3px_0_#0D4F78] hover:enabled:shadow-[1px_1px_0_#0D4F78]
-                  hover:enabled:translate-x-0.5 hover:enabled:translate-y-0.5
-                  transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
-                  ${confirmVariant === 'primary'
-                    ? 'bg-blue-core border-blue-deep'
-                    : 'bg-status-error border-blue-deep'
-                  }
-                `}
+                className={confirmVariant === 'danger' ? 'bg-status-error border-blue-deep text-white' : ''}
               >
                 {loading ? 'Loading…' : confirmLabel}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
