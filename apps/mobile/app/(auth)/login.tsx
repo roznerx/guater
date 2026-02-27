@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvo
 import { Link } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { supabase } from '@/lib/supabase'
+import AuthHeader from '@/components/ui/AuthHeader'
+import AuthBanner from '@/components/ui/AuthBanner'
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('')
@@ -18,11 +20,12 @@ export default function LoginScreen() {
     }
     setLoading(true)
     setError(null)
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-
-    if (error) setError(error.message)
-    setLoading(false)
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) setError(error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -31,19 +34,9 @@ export default function LoginScreen() {
       className="flex-1 bg-surface dark:bg-dark-surface"
     >
       <View className="flex-1 justify-center px-6">
+        <AuthHeader subtitle="Log in to your account" />
 
-        <Text className="text-4xl font-bold text-blue-deep dark:text-blue-light mb-2">
-          Güater
-        </Text>
-        <Text className="text-base text-text-muted dark:text-dark-text-muted mb-10">
-          Log in to your account
-        </Text>
-
-        {error && (
-          <View className="bg-white dark:bg-dark-card border-2 border-status-error rounded-xl px-4 py-3 mb-4">
-            <Text className="text-status-error text-sm">{error}</Text>
-          </View>
-        )}
+        {error && <AuthBanner message={error} type="error" />}
 
         <View className="flex flex-col gap-4">
           <View>
@@ -82,6 +75,7 @@ export default function LoginScreen() {
               <TouchableOpacity
                 onPress={() => setShowPassword(v => !v)}
                 className="px-3"
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
               >
                 <Ionicons
                   name={showPassword ? 'eye-off' : 'eye'}
@@ -95,7 +89,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             onPress={handleLogin}
             disabled={loading}
-            className="bg-blue-deep rounded-xl py-3.5 items-center mt-2"
+            className="bg-blue-deep rounded-xl py-3.5 items-center mt-2 disabled:opacity-50"
           >
             {loading
               ? <ActivityIndicator color="white" />
@@ -104,15 +98,14 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <Link href={"/(auth)/signup" as any} className="mt-6 text-center text-sm text-text-muted dark:text-dark-text-muted">
+        <Link href="/(auth)/signup" className="mt-6 text-center text-sm text-text-muted dark:text-dark-text-muted">
           Don't have an account?{' '}
           <Text className="text-blue-core font-semibold">Sign up</Text>
         </Link>
 
-        <Link href={"/(auth)/forgot-password" as any} className="mt-3 text-center text-sm text-blue-core font-semibold">
+        <Link href="/(auth)/forgot-password" className="mt-3 text-center text-sm text-blue-core font-semibold">
           Forgot your password?
         </Link>
-
       </View>
     </KeyboardAvoidingView>
   )

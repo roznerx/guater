@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { Link } from 'expo-router'
 import { supabase } from '@/lib/supabase'
+import AuthHeader from '@/components/ui/AuthHeader'
+import AuthBanner from '@/components/ui/AuthBanner'
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('')
@@ -11,15 +13,19 @@ export default function SignupScreen() {
   const [message, setMessage] = useState<string | null>(null)
 
   async function handleSignup() {
-    if (!email || !password) return
+    if (!email || !password) {
+      setError('Please enter your email and password.')
+      return
+    }
     setLoading(true)
     setError(null)
-
-    const { error } = await supabase.auth.signUp({ email, password })
-
-    if (error) setError(error.message)
-    else setMessage('Check your email to confirm your account.')
-    setLoading(false)
+    try {
+      const { error } = await supabase.auth.signUp({ email, password })
+      if (error) setError(error.message)
+      else setMessage('Check your email to confirm your account.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -28,25 +34,10 @@ export default function SignupScreen() {
       className="flex-1 bg-surface dark:bg-dark-surface"
     >
       <View className="flex-1 justify-center px-6">
+        <AuthHeader subtitle="Create your account" />
 
-        <Text className="text-4xl font-bold text-blue-deep dark:text-blue-light mb-2">
-          Güater
-        </Text>
-        <Text className="text-base text-text-muted dark:text-dark-text-muted mb-10">
-          Create your account
-        </Text>
-
-        {error && (
-          <View className="bg-white dark:bg-dark-card border-2 border-status-error rounded-xl px-4 py-3 mb-4">
-            <Text className="text-status-error text-sm">{error}</Text>
-          </View>
-        )}
-
-        {message && (
-          <View className="bg-white dark:bg-dark-card border-2 border-teal-core rounded-xl px-4 py-3 mb-4">
-            <Text className="text-teal-deep text-sm">{message}</Text>
-          </View>
-        )}
+        {error && <AuthBanner message={error} type="error" />}
+        {message && <AuthBanner message={message} type="success" />}
 
         <View className="flex flex-col gap-4">
           <View>
@@ -61,6 +52,7 @@ export default function SignupScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
+              returnKeyType="next"
               className="border-2 border-blue-deep rounded-xl px-3 py-3 text-sm text-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-card"
             />
           </View>
@@ -76,6 +68,8 @@ export default function SignupScreen() {
               placeholderTextColor="#94A8BA"
               secureTextEntry
               autoComplete="password"
+              returnKeyType="done"
+              onSubmitEditing={handleSignup}
               className="border-2 border-blue-deep rounded-xl px-3 py-3 text-sm text-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-card"
             />
           </View>
@@ -83,7 +77,7 @@ export default function SignupScreen() {
           <TouchableOpacity
             onPress={handleSignup}
             disabled={loading}
-            className="bg-blue-deep rounded-xl py-3.5 items-center mt-2"
+            className="bg-blue-deep rounded-xl py-3.5 items-center mt-2 disabled:opacity-50"
           >
             {loading
               ? <ActivityIndicator color="white" />
@@ -96,7 +90,6 @@ export default function SignupScreen() {
           Already have an account?{' '}
           <Text className="text-blue-core font-semibold">Log in</Text>
         </Link>
-
       </View>
     </KeyboardAvoidingView>
   )

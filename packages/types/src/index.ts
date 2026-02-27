@@ -1,11 +1,9 @@
-export * from './water'
-export * from './user'
 
 export interface WaterLog {
   id: string
   user_id: string
   amount_ml: number
-  logged_at: string
+  logged_at: string  // ISO UTC string
   source: 'manual' | 'quick' | 'reminder'
   note?: string
   created_at: string
@@ -15,24 +13,27 @@ export interface UserProfile {
   id: string
   display_name?: string
   daily_goal_ml: number
-  preferred_unit: string
+  preferred_unit: 'ml' | 'oz'
   timezone: string
   weight_kg?: number | null
   age?: number | null
   activity_level?: string | null
   climate?: string | null
   theme?: string | null
+  reminder_enabled?: boolean
+  reminder_interval_hours?: number
+  created_at?: string
 }
 
 export interface DailySummary {
-  date: string
+  date: string  // YYYY-MM-DD in user's timezone
   total_ml: number
   goal_ml: number
   percentage: number
   logs: WaterLog[]
 }
 
-export interface QuickAddPreset {
+export interface QuickPreset {
   id: string
   user_id: string
   label: string

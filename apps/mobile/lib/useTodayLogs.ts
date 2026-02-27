@@ -1,71 +1,23 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from './supabase'
+import { DiureticLog, WaterLog } from '@guater/types';
 
 function getTodayRange(timezone: string): { start: string; end: string } {
   const now = new Date()
+  const todayStr = now.toLocaleDateString('en-CA', { timeZone: timezone })
 
-  // Get today's date in the target timezone
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(now)
-
-  const year = parseInt(parts.find(p => p.type === 'year')!.value)
-  const month = parseInt(parts.find(p => p.type === 'month')!.value)
-  const day = parseInt(parts.find(p => p.type === 'day')!.value)
-
-  const midnight = new Date(Date.UTC(year, month - 1, day, 0, 0, 0))
-  const tzMidnight = findMidnightUTC(year, month, day, timezone)
+  function toUTCISO(dateStr: string, timeStr: string): string {
+    const localDate = new Date(`${dateStr}T${timeStr}`)
+    const utc = new Date(localDate.toLocaleString('en-US', { timeZone: 'UTC' }))
+    const local = new Date(localDate.toLocaleString('en-US', { timeZone: timezone }))
+    const offsetMs = local.getTime() - utc.getTime()
+    return new Date(localDate.getTime() - offsetMs).toISOString()
+  }
 
   return {
-    start: tzMidnight.toISOString(),
-    end: new Date(tzMidnight.getTime() + 24 * 60 * 60 * 1000 - 1).toISOString(),
+    start: toUTCISO(todayStr, '00:00:00.000'),
+    end: toUTCISO(todayStr, '23:59:59.999'),
   }
-}
-
-function findMidnightUTC(year: number, month: number, day: number, timezone: string): Date {
-  let candidate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0))
-  
-  for (let offsetHours = -14; offsetHours <= 14; offsetHours++) {
-    const test = new Date(Date.UTC(year, month - 1, day, -offsetHours, 0, 0))
-    const testParts = new Intl.DateTimeFormat('en-CA', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).formatToParts(test)
-
-    const tYear = parseInt(testParts.find(p => p.type === 'year')!.value)
-    const tMonth = parseInt(testParts.find(p => p.type === 'month')!.value)
-    const tDay = parseInt(testParts.find(p => p.type === 'day')!.value)
-    const tHour = parseInt(testParts.find(p => p.type === 'hour')!.value)
-    const tMinute = parseInt(testParts.find(p => p.type === 'minute')!.value)
-
-    if (tYear === year && tMonth === month && tDay === day && tHour === 0 && tMinute === 0) {
-      return test
-    }
-  }
-
-  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0))
-}
-export interface WaterLog {
-  id: string
-  amount_ml: number
-  logged_at: string
-  source: string
-}
-
-export interface DiureticLog {
-  id: string
-  label: string
-  amount_ml: number
-  diuretic_factor: number
-  logged_at: string
 }
 
 export function useTodayLogs(userId: string | undefined, timezone: string) {
@@ -74,17 +26,12 @@ export function useTodayLogs(userId: string | undefined, timezone: string) {
   const [loading, setLoading] = useState(true)
 
   const fetch = useCallback(async () => {
-    console.log('fetch called, userId:', userId, 'timezone:', timezone)
     if (!userId) {
       setLoading(false)
       return
     }
 
-    const tz = timezone || 'UTC'
-    const { start, end } = getTodayRange(tz)
-    console.log('range start:', start)
-    console.log('range end:', end)
-    console.log('now UTC:', new Date().toISOString())
+    const { start, end } = getTodayRange(timezone || 'UTC')
 
     const [waterRes, diureticRes] = await Promise.all([
       supabase
@@ -103,18 +50,12 @@ export function useTodayLogs(userId: string | undefined, timezone: string) {
         .order('logged_at', { ascending: false }),
     ])
 
-    console.log('waterRes:', waterRes.data, waterRes.error)
-    console.log('diureticRes:', diureticRes.data, diureticRes.error)
-
-    setWaterLogs(waterRes.data ?? [])
-    setDiureticLogs(diureticRes.data ?? [])
+    setWaterLogs(waterRes.data as WaterLog[] ?? [])
+    setDiureticLogs(diureticRes.data as DiureticLog[] ?? [])
     setLoading(false)
   }, [userId, timezone])
 
-  useEffect(() => {
-    console.log('useEffect, userId:', userId)
-    fetch()
-  }, [fetch])
+  useEffect(() => { fetch() }, [fetch])
 
   return { waterLogs, diureticLogs, loading, refresh: fetch }
 }
