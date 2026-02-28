@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { getTodayRangeForTimezone } from '@/lib/utils'
+import { getTodayRange } from '@guater/utils'
 
 export async function logWater(formData: FormData) {
   const supabase = await createClient()
@@ -76,7 +76,7 @@ export async function clearAllLogs() {
     .single()
 
   const timezone = profile?.timezone ?? 'UTC'
-  const { start, end } = getTodayRangeForTimezone(timezone)
+  const { start, end } = getTodayRange(timezone)
 
   await supabase
     .from('water_logs')
@@ -246,7 +246,7 @@ export async function clearAllDiureticLogs() {
     .single()
 
   const timezone = profile?.timezone ?? 'UTC'
-  const { start, end } = getTodayRangeForTimezone(timezone)
+  const { start, end } = getTodayRange(timezone)
 
   await supabase
     .from('diuretic_logs')

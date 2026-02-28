@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import type { DiureticLog, DiureticPreset } from '@guater/types'
 import { getAuthenticatedClient } from './auth'
-import { getTodayRangeForTimezone } from '@/lib/utils'
+import { getTodayRange } from '@guater/utils'
 
 export async function getTodayDiureticLogs(timezone: string, dayOffset = 0): Promise<DiureticLog[]> {
   const auth = await getAuthenticatedClient()
@@ -10,7 +10,7 @@ export async function getTodayDiureticLogs(timezone: string, dayOffset = 0): Pro
 
   return unstable_cache(
     async () => {
-      const { start, end } = getTodayRangeForTimezone(timezone, dayOffset)
+      const { start, end } = getTodayRange(timezone, dayOffset)
       const { data, error } = await supabase
         .from('diuretic_logs')
         .select('*')

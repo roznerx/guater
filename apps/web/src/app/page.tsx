@@ -4,7 +4,6 @@ import DailyWarningBanner from "@/components/water/DailyWarningBanner"
 import DiureticTracker from "@/components/water/diuretics/DiureticTracker"
 import DiureticWarningBanner from "@/components/water/diuretics/DiureticWarningBanner"
 import LogList from "@/components/water/LogList"
-import ProgressBar from "@/components/water/ProgressBar"
 import QuickAdd from "@/components/water/QuickAdd"
 import StreakBadge from "@/components/water/StreakBadge"
 import WaterBottle from "@/components/water/WaterBottle"
@@ -84,11 +83,8 @@ export default async function DashboardPage({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 lg:items-stretch">
           <div className="flex flex-col gap-6">
-            <Card className="flex-1 flex flex-col items-center justify-center">
+            <Card className="flex-1 flex flex-col justify-center">
               <WaterBottle consumed={consumed} goal={goal} />
-              <div className="mt-4 w-full">
-                <ProgressBar consumed={consumed} goal={goal} />
-              </div>
             </Card>
             {isToday && (
               <Card>

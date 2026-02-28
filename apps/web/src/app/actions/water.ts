@@ -1,9 +1,9 @@
 'use server'
 
 import { revalidatePath, revalidateTag } from 'next/cache'
-import { getTodayRangeForTimezone } from '@/lib/utils'
 import { getAuthenticatedClient } from './auth'
 import { getUserTimezone } from './utils'
+import { getTodayRange } from '@guater/utils'
 
 export async function logWater(formData: FormData) {
   const auth = await getAuthenticatedClient()
@@ -56,7 +56,7 @@ export async function clearAllLogs() {
   const { supabase, userId } = auth
 
   const timezone = await getUserTimezone(supabase, userId)
-  const { start, end } = getTodayRangeForTimezone(timezone)
+  const { start, end } = getTodayRange(timezone)
 
   await supabase
     .from('water_logs')

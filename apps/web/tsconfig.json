@@ -21,7 +21,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@guater/types": ["../../packages/types/src"]
+      "@guater/types": ["../../packages/types/src"],
+      "@guater/utils": ["../../packages/utils/src/index.ts"]
     }
   },
   "include": [

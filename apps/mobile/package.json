@@ -10,6 +10,7 @@
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@guater/types": "file:../../packages/types",
+    "@guater/utils": "file:../../packages/utils",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "react-native-worklets": "^0.5.1",
     "expo": "~54.0.33",

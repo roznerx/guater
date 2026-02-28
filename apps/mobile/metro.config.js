@@ -18,6 +18,7 @@ config.resolver.extraNodeModules = {
   'react': path.resolve(projectRoot, 'node_modules/react'),
   'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
   '@guater/types': path.resolve(monorepoRoot, 'packages/types'),
+  '@guater/utils': path.resolve(monorepoRoot, 'packages/utils'),
 }
 
 module.exports = withNativeWind(config, { input: './global.css' })

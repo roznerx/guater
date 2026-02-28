@@ -1,27 +1,26 @@
-import Svg, { Defs, ClipPath, Rect, Path, LinearGradient, Stop, G, Text as SvgText } from 'react-native-svg'
+import Svg, { Defs, ClipPath, Rect, Path, LinearGradient, Stop, G } from 'react-native-svg'
 import { View, Text } from 'react-native'
-import { useId } from 'react'
+import { getHydrationProgress } from '@guater/utils'
 
 interface WaterBottleProps {
   consumed: number
   goal: number
-  compact?: boolean
 }
 
-export default function WaterBottle({ consumed, goal, compact = false }: WaterBottleProps) {
-  const percentage = Math.min(Math.round((consumed / goal) * 100), 100)
-  const remaining = Math.max(goal - consumed, 0)
+export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
+  const { percentage, remaining, overGoal } = getHydrationProgress(consumed, goal)
 
-  const W = compact ? 72 : 120
-  const H = compact ? 140 : 220
-  const bottleTop = compact ? 24 : 40
+  const W = 72
+  const H = 140
+  const bottleTop = 24
   const bottleBottom = H - 10
   const bottleHeight = bottleBottom - bottleTop
   const fillHeight = (percentage / 100) * bottleHeight
   const fillY = bottleBottom - fillHeight
+  const isFull = percentage >= 100
 
   const bottlePath = `
-    M ${W * 0.35} ${compact ? 6 : 10}
+    M ${W * 0.35} 6
     L ${W * 0.35} ${bottleTop}
     Q ${W * 0.1} ${bottleTop + 20} ${W * 0.1} ${bottleTop + 40}
     L ${W * 0.1} ${bottleBottom - 10}
@@ -30,49 +29,55 @@ export default function WaterBottle({ consumed, goal, compact = false }: WaterBo
     Q ${W * 0.9} ${bottleBottom} ${W * 0.9} ${bottleBottom - 10}
     L ${W * 0.9} ${bottleTop + 40}
     Q ${W * 0.9} ${bottleTop + 20} ${W * 0.65} ${bottleTop}
-    L ${W * 0.65} ${compact ? 6 : 10}
+    L ${W * 0.65} 6
     Z
   `
 
- if (compact) {
   return (
-    <View style={{ height: H, flexDirection: 'row' }}>
-      <View style={{ width: W, height: H }}>
+    <View style={{ height: H, position: 'relative' }}>
+      {/* Bottle absolutely positioned on the left */}
+      <View style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }}>
         <Svg width={W} height={H}>
           <Defs>
-            <ClipPath id="bottle-clip-compact">
+            <ClipPath id="bottle-clip">
               <Path d={bottlePath} />
             </ClipPath>
-            <LinearGradient id="water-grad-compact" x1="0" y1="0" x2="1" y2="0">
+            <LinearGradient id="water-grad" x1="0" y1="0" x2="1" y2="0">
               <Stop offset="0" stopColor="#1A6FA0" />
               <Stop offset="1" stopColor="#3E8FC0" />
             </LinearGradient>
           </Defs>
           <Path d={bottlePath} fill="#F4F8FB" stroke="#0D4F78" strokeWidth={2.5} />
-          <G clipPath="url(#bottle-clip-compact)">
-            <Rect x={0} y={fillY} width={W} height={fillHeight} fill="url(#water-grad-compact)" />
+          <G clipPath="url(#bottle-clip)">
+            <Rect x={0} y={fillY} width={W} height={fillHeight} fill="url(#water-grad)" />
           </G>
           <Path d={bottlePath} fill="none" stroke="#0D4F78" strokeWidth={2.5} />
         </Svg>
       </View>
 
-      <View style={{ flex: 1, marginLeft: 16, justifyContent: 'center' }}>
+      {/* Stats offset by bottle width */}
+      <View style={{ paddingLeft: W + 16, height: H, justifyContent: 'center' }}>
         <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#0D4F78' }}>
-          {consumed.toLocaleString()}
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#94A8BA' }}> ml</Text>
+          {percentage}%
         </Text>
-        <Text style={{ fontSize: 14, color: '#94A8BA', marginTop: 4 }}>
-          {percentage}% of {goal.toLocaleString()} ml
+        <Text style={{ fontSize: 14, fontWeight: '600', color: '#1A6FA0', marginTop: 2 }}>
+          {consumed.toLocaleString()} ml
         </Text>
-        <Text style={{ fontSize: 14, color: '#94A8BA', marginTop: 2 }}>
-          {remaining > 0
-            ? `${remaining.toLocaleString()} ml to go`
-            : 'Goal reached! 🌊'
+        <Text style={{ fontSize: 13, color: '#94A8BA', marginTop: 2 }}>
+          {isFull
+            ? 'Goal reached! 🌊'
+            : `${remaining.toLocaleString()} ml to go`
           }
         </Text>
+        {overGoal > 0 && (
+          <Text style={{ fontSize: 12, color: '#2AABA2', marginTop: 2 }}>
+            +{overGoal.toLocaleString()} ml over goal
+          </Text>
+        )}
+        {/* Progress bar */}
         <View style={{
           height: 12,
-          marginTop: 12,
+          marginTop: 10,
           borderRadius: 999,
           borderWidth: 2,
           borderColor: '#0D4F78',
@@ -82,45 +87,10 @@ export default function WaterBottle({ consumed, goal, compact = false }: WaterBo
           <View style={{
             height: '100%',
             borderRadius: 999,
-            backgroundColor: '#1A6FA0',
+            backgroundColor: isFull ? '#2AABA2' : '#1A6FA0',
             width: `${percentage}%`,
           }} />
         </View>
-      </View>
-    </View>
-  )
-}
-
-  // Full size — original layout
-  return (
-    <View className="items-center">
-      <Svg width={W} height={H}>
-        <Defs>
-          <ClipPath id="bottle-clip">
-            <Path d={bottlePath} />
-          </ClipPath>
-          <LinearGradient id="water-grad" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#1A6FA0" />
-            <Stop offset="1" stopColor="#3E8FC0" />
-          </LinearGradient>
-        </Defs>
-        <Path d={bottlePath} fill="#F4F8FB" stroke="#0D4F78" strokeWidth={2.5} />
-        <G clipPath="url(#bottle-clip)">
-          <Rect x={0} y={fillY} width={W} height={fillHeight} fill="url(#water-grad)" />
-        </G>
-        <Path d={bottlePath} fill="none" stroke="#0D4F78" strokeWidth={2.5} />
-      </Svg>
-      <View className="items-center mt-2">
-        <Text className="text-3xl font-bold text-blue-deep dark:text-blue-light">
-          {consumed.toLocaleString()}
-          <Text className="text-base font-semibold text-text-muted dark:text-dark-text-muted"> ml</Text>
-        </Text>
-        <Text className="text-sm text-text-muted dark:text-dark-text-muted mt-1">
-          {remaining > 0
-            ? `${remaining.toLocaleString()} ml to go · goal ${goal.toLocaleString()}`
-            : 'Goal reached! 🌊'
-          }
-        </Text>
       </View>
     </View>
   )

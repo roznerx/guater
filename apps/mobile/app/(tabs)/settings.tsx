@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile } from '@/lib/useProfile'
 import { supabase } from '@/lib/supabase'
 import Card from '@/components/ui/Card'
+import { calculateRecommendedIntake } from '@guater/utils'
 
 const ACTIVITY_LEVELS = [
   { value: 'sedentary',   label: 'Sedentary',   description: 'Mostly sitting' },
@@ -34,33 +35,6 @@ const TIMEZONES = [
   { value: 'Europe/London',                    label: 'London (GMT)' },
   { value: 'Europe/Paris',                     label: 'Paris (CET)' },
 ]
-
-function calculateRecommendedIntake(
-  weightKg: number,
-  age: number,
-  activityLevel: string,
-  climate: string
-): number {
-  const base = weightKg * 35
-  const ageFactor = age > 55 ? 1.1 : 1
-  const activityBonus: Record<string, number> = {
-    sedentary: 0,
-    moderate: 350,
-    active: 600,
-    very_active: 900,
-  }
-  const climateBonus: Record<string, number> = {
-    cold: 0,
-    temperate: 150,
-    hot: 400,
-  }
-  return Math.round(
-    base * ageFactor +
-    (activityBonus[activityLevel] ?? 0) +
-    (climateBonus[climate] ?? 0)
-  )
-}
-
 function SegmentedControl({
   options,
   value,
@@ -179,8 +153,12 @@ export default function SettingsScreen() {
   const [displayName, setDisplayName]     = useState(profile?.display_name ?? '')
   const [weightKg, setWeightKg]           = useState(profile?.weight_kg?.toString() ?? '')
   const [age, setAge]                     = useState(profile?.age?.toString() ?? '')
-  const [activityLevel, setActivityLevel] = useState(profile?.activity_level ?? 'moderate')
-  const [climate, setClimate]             = useState(profile?.climate ?? 'temperate')
+  const [activityLevel, setActivityLevel] = useState<'sedentary' | 'moderate' | 'active' | 'very_active'>(
+  (profile?.activity_level as 'sedentary' | 'moderate' | 'active' | 'very_active') ?? 'moderate'
+)
+const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
+  (profile?.climate as 'cold' | 'temperate' | 'hot') ?? 'temperate'
+)
   const [dailyGoal, setDailyGoal]         = useState(profile?.daily_goal_ml?.toString() ?? '2500')
   const [unit, setUnit]                   = useState(profile?.preferred_unit ?? 'ml')
   const [timezone, setTimezone]           = useState(profile?.timezone ?? 'UTC')
@@ -196,8 +174,8 @@ export default function SettingsScreen() {
     setDisplayName(profile.display_name ?? '')
     setWeightKg(profile.weight_kg?.toString() ?? '')
     setAge(profile.age?.toString() ?? '')
-    setActivityLevel(profile.activity_level ?? 'moderate')
-    setClimate(profile.climate ?? 'temperate')
+    setActivityLevel((profile.activity_level as 'sedentary' | 'moderate' | 'active' | 'very_active') ?? 'moderate')
+    setClimate((profile.climate as 'cold' | 'temperate' | 'hot') ?? 'temperate')
     setDailyGoal(profile.daily_goal_ml?.toString() ?? '2500')
     setUnit((profile.preferred_unit as 'ml' | 'oz') ?? 'ml')
     setTimezone(profile.timezone ?? 'UTC')
@@ -311,7 +289,7 @@ export default function SettingsScreen() {
               <OptionList
                 options={ACTIVITY_LEVELS}
                 value={activityLevel}
-                onChange={setActivityLevel}
+                onChange={(v) => setActivityLevel(v as 'sedentary' | 'moderate' | 'active' | 'very_active')}
               />
             </View>
 
@@ -320,7 +298,7 @@ export default function SettingsScreen() {
               <SegmentedControl
                 options={CLIMATES}
                 value={climate}
-                onChange={setClimate}
+                onChange={(v) => setClimate(v as 'cold' | 'temperate' | 'hot')}
               />
             </View>
           </View>

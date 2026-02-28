@@ -13,12 +13,12 @@ export interface UserProfile {
   id: string
   display_name?: string
   daily_goal_ml: number
-  preferred_unit: 'ml' | 'oz'
   timezone: string
   weight_kg?: number | null
   age?: number | null
-  activity_level?: string | null
-  climate?: string | null
+  activity_level?: 'sedentary' | 'moderate' | 'active' | 'very_active' | null
+  climate?: 'cold' | 'temperate' | 'hot' | null
+  preferred_unit: 'ml' | 'oz'
   theme?: string | null
   reminder_enabled?: boolean
   reminder_interval_hours?: number
