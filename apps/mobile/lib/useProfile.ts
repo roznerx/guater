@@ -11,13 +11,18 @@ export function useProfile(userId: string | undefined) {
       setLoading(false)
       return
     }
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    setProfile(data)
-    setLoading(false)
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      setProfile(data)
+    } catch {
+      setProfile(null)
+    } finally {
+      setLoading(false)
+    }
   }, [userId])
 
   useEffect(() => { fetch() }, [fetch])
