@@ -3,9 +3,14 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator,
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth } from '@/lib/AuthContext'
 import { useProfile } from '@/lib/useProfile'
+import { usePresets } from '@/lib/usePresets'
+import { useDiureticPresets } from '@/lib/useDiureticPresets'
 import { supabase } from '@/lib/supabase'
-import Card from '@/components/ui/Card'
 import { calculateRecommendedIntake } from '@guater/utils'
+import Card from '@/components/ui/Card'
+import PresetsManager from '@/components/water/PresetsManager'
+import DiureticPresetsManager from '@/components/water/DiureticPresetsManager'
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 
 const ACTIVITY_LEVELS = [
   { value: 'sedentary',   label: 'Sedentary',   description: 'Mostly sitting' },
@@ -26,15 +31,16 @@ const UNITS = [
 ]
 
 const TIMEZONES = [
-  { value: 'UTC',                              label: 'UTC' },
-  { value: 'America/Argentina/Buenos_Aires',   label: 'Buenos Aires (ART)' },
-  { value: 'America/New_York',                 label: 'New York (EST)' },
-  { value: 'America/Chicago',                  label: 'Chicago (CST)' },
-  { value: 'America/Denver',                   label: 'Denver (MST)' },
-  { value: 'America/Los_Angeles',              label: 'Los Angeles (PST)' },
-  { value: 'Europe/London',                    label: 'London (GMT)' },
-  { value: 'Europe/Paris',                     label: 'Paris (CET)' },
+  { value: 'UTC',                            label: 'UTC' },
+  { value: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires (ART)' },
+  { value: 'America/New_York',               label: 'New York (EST)' },
+  { value: 'America/Chicago',                label: 'Chicago (CST)' },
+  { value: 'America/Denver',                 label: 'Denver (MST)' },
+  { value: 'America/Los_Angeles',            label: 'Los Angeles (PST)' },
+  { value: 'Europe/London',                  label: 'London (GMT)' },
+  { value: 'Europe/Paris',                   label: 'Paris (CET)' },
 ]
+
 function SegmentedControl({
   options,
   value,
@@ -59,11 +65,7 @@ function SegmentedControl({
             borderLeftColor: '#0D4F78',
           }}
         >
-          <Text style={{
-            fontSize: 13,
-            fontWeight: '600',
-            color: value === opt.value ? '#ffffff' : '#0D4F78',
-          }}>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: value === opt.value ? '#ffffff' : '#0D4F78' }}>
             {opt.label}
           </Text>
         </TouchableOpacity>
@@ -146,28 +148,25 @@ const inputStyle = {
 
 export default function SettingsScreen() {
   const { user } = useAuth()
-  const { profile, loading, refresh } = useProfile(user?.id)
+  const { profile, loading, refresh: refreshProfile } = useProfile(user?.id)
+
+  const tabBarHeight = useBottomTabBarHeight()
+  
+  const [presetsRefreshKey, setPresetsRefreshKey] = useState(0)
+  const [diureticPresetsRefreshKey, setDiureticPresetsRefreshKey] = useState(0)
+
+  const { presets } = usePresets(user?.id, presetsRefreshKey)
+  const { presets: diureticPresets } = useDiureticPresets(user?.id, diureticPresetsRefreshKey)
 
   const [saving, setSaving] = useState(false)
-
-  const [displayName, setDisplayName]     = useState(profile?.display_name ?? '')
-  const [weightKg, setWeightKg]           = useState(profile?.weight_kg?.toString() ?? '')
-  const [age, setAge]                     = useState(profile?.age?.toString() ?? '')
-  const [activityLevel, setActivityLevel] = useState<'sedentary' | 'moderate' | 'active' | 'very_active'>(
-  (profile?.activity_level as 'sedentary' | 'moderate' | 'active' | 'very_active') ?? 'moderate'
-)
-const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
-  (profile?.climate as 'cold' | 'temperate' | 'hot') ?? 'temperate'
-)
-  const [dailyGoal, setDailyGoal]         = useState(profile?.daily_goal_ml?.toString() ?? '2500')
-  const [unit, setUnit]                   = useState(profile?.preferred_unit ?? 'ml')
-  const [timezone, setTimezone]           = useState(profile?.timezone ?? 'UTC')
-
-  const weight = parseFloat(weightKg)
-  const ageNum = parseInt(age)
-  const recommended = weight > 0 && ageNum > 0
-    ? calculateRecommendedIntake(weight, ageNum, activityLevel, climate)
-    : null
+  const [displayName, setDisplayName] = useState('')
+  const [weightKg, setWeightKg] = useState('')
+  const [age, setAge] = useState('')
+  const [activityLevel, setActivityLevel] = useState<'sedentary' | 'moderate' | 'active' | 'very_active'>('moderate')
+  const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>('temperate')
+  const [dailyGoal, setDailyGoal] = useState('2500')
+  const [unit, setUnit] = useState<'ml' | 'oz'>('ml')
+  const [timezone, setTimezone] = useState('UTC')
 
   useEffect(() => {
     if (!profile) return
@@ -180,6 +179,12 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
     setUnit((profile.preferred_unit as 'ml' | 'oz') ?? 'ml')
     setTimezone(profile.timezone ?? 'UTC')
   }, [profile])
+
+  const weight = parseFloat(weightKg)
+  const ageNum = parseInt(age)
+  const recommended = weight > 0 && ageNum > 0
+    ? calculateRecommendedIntake(weight, ageNum, activityLevel, climate)
+    : null
 
   async function handleSave() {
     if (!user || saving) return
@@ -204,7 +209,7 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
         return
       }
 
-      refresh()
+      refreshProfile()
       Alert.alert('Saved', 'Settings updated successfully.')
     } finally {
       setSaving(false)
@@ -217,9 +222,7 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
       {
         text: 'Log out',
         style: 'destructive',
-        onPress: async () => {
-          await supabase.auth.signOut()
-        },
+        onPress: async () => { await supabase.auth.signOut() },
       },
     ])
   }
@@ -234,9 +237,8 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-dark-surface">
-      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: tabBarHeight + 16 }}>
 
-        {/* Header */}
         <View className="py-4">
           <Text className="text-xl font-bold text-text-secondary dark:text-dark-text-secondary">
             Settings
@@ -246,7 +248,6 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
         {/* Profile */}
         <Card className="mb-4">
           <SectionLabel label="Profile" />
-
           <View style={{ gap: 16 }}>
             <View>
               <FieldLabel label="Name" />
@@ -258,7 +259,6 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
                 style={inputStyle}
               />
             </View>
-
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <FieldLabel label="Weight (kg)" />
@@ -283,7 +283,6 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
                 />
               </View>
             </View>
-
             <View>
               <FieldLabel label="Activity level" />
               <OptionList
@@ -292,7 +291,6 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
                 onChange={(v) => setActivityLevel(v as 'sedentary' | 'moderate' | 'active' | 'very_active')}
               />
             </View>
-
             <View>
               <FieldLabel label="Climate" />
               <SegmentedControl
@@ -304,7 +302,7 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
           </View>
         </Card>
 
-        {/* Recommended intake — shown when weight and age are filled */}
+        {/* Recommended intake */}
         {recommended && (
           <View style={{
             marginBottom: 16,
@@ -322,9 +320,7 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
                 {recommended.toLocaleString()} ml / day
               </Text>
               <TouchableOpacity onPress={() => setDailyGoal(String(recommended))}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#1A6FA0' }}>
-                  Use this →
-                </Text>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: '#1A6FA0' }}>Use this →</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -363,6 +359,22 @@ const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>(
             options={TIMEZONES}
             value={timezone}
             onChange={setTimezone}
+          />
+        </Card>
+
+        {/* Quick add presets */}
+        <Card className="mb-4">
+          <PresetsManager
+            presets={presets}
+            onRefresh={() => setPresetsRefreshKey(k => k + 1)}
+          />
+        </Card>
+
+        {/* Diuretic presets */}
+        <Card className="mb-4">
+          <DiureticPresetsManager
+            presets={diureticPresets}
+            onRefresh={() => setDiureticPresetsRefreshKey(k => k + 1)}
           />
         </Card>
 

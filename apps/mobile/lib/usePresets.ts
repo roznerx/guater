@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from './supabase'
 import { QuickPreset } from '@guater/types'
 
-export function usePresets(userId: string | undefined) {
+export function usePresets(userId: string | undefined, refreshKey = 0) {
   const [presets, setPresets] = useState<QuickPreset[]>([])
 
   const fetch = useCallback(async () => {
@@ -19,7 +19,7 @@ export function usePresets(userId: string | undefined) {
     }
   }, [userId])
 
-  useEffect(() => { fetch() }, [fetch])
+  useEffect(() => { fetch() }, [fetch, refreshKey])
 
   return { presets, refresh: fetch }
 }

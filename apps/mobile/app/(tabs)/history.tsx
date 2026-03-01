@@ -7,6 +7,7 @@ import { useMonthlyLogs } from '@/lib/useMonthlyLogs'
 import { getHydrationProgress, getMonthBounds } from '@guater/utils'
 import Card from '@/components/ui/Card'
 import type { WaterLog } from '@guater/types'
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 
 function groupByDay(
   logs: Pick<WaterLog, 'logged_at' | 'amount_ml'>[],
@@ -29,6 +30,9 @@ function formatDate(isoDate: string) {
 export default function HistoryScreen() {
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile(user?.id)
+  
+  const tabBarHeight = useBottomTabBarHeight()
+
   const timezone = profile?.timezone ?? 'UTC'
   const goal = profile?.daily_goal_ml ?? 2500
 
@@ -93,7 +97,7 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-dark-surface">
-      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: tabBarHeight + 16 }}>
 
         <View className="py-4">
           <Text className="text-xl font-bold text-text-secondary dark:text-dark-text-secondary">
@@ -210,7 +214,7 @@ export default function HistoryScreen() {
             </View>
           ) : (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>
-              {calendarDays.map(({ key, total, pct }) => {
+              {calendarDays.map(({ key, total, pct }, i) => {
                 const isToday = key === todayKey
                 const isFuture = key > todayKey
                 const bgColor = isFuture
@@ -231,13 +235,28 @@ export default function HistoryScreen() {
                     style={{
                       width: cellSize,
                       height: cellSize,
+                      paddingTop: 4,
+                      paddingLeft: 4,
                       borderRadius: 4,
                       borderWidth: 2,
                       borderStyle: isFuture ? 'dashed' : 'solid',
                       borderColor: isToday ? '#0D4F78' : isFuture ? '#DDE8F0' : 'transparent',
                       backgroundColor: bgColor,
                     }}
-                  />
+                  >
+                    <Text style={{
+                      fontSize: cellSize * 0.32,
+                      fontWeight: '600',
+                      lineHeight: cellSize * 0.38,
+                      color: isFuture
+                        ? '#DDE8F0'
+                        : total === 0
+                          ? '#94A8BA'
+                          : '#ffffff',
+                    }}>
+                      {String(i + 1)}
+                    </Text>
+                  </View>
                 )
               })}
             </View>

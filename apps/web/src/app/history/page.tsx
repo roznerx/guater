@@ -197,7 +197,7 @@ export default async function HistoryPage({
           </div>
 
           <div className="grid grid-cols-7 gap-1.5">
-            {calendarDays.map(({ key, total, pct }) => {
+            {calendarDays.map(({ key, total, pct }, i) => {
               const isToday = key === todayKey
               const isFuture = key > todayKey
               const bgColor = isFuture
@@ -224,9 +224,21 @@ export default async function HistoryPage({
                         : 'border-transparent'
                     }
                   `}
-                />
+                >
+                  <span className={`text-xs font-semibold leading-none pl-2
+                  ${isFuture
+                    ? 'text-slate-soft dark:text-dark-border'
+                    : total === 0
+                      ? 'text-text-muted dark:text-dark-text-muted'
+                      : 'text-white'
+                  }
+                `}>
+                  {String(i + 1)}
+                </span>
+                </div>
               )
             })}
+            
           </div>
 
           <div className="flex items-center gap-3 mt-4 justify-end">

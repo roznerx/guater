@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth } from '@/lib/AuthContext'
@@ -11,6 +11,10 @@ import Card from '@/components/ui/Card'
 import WaterBottle from '@/components/water/WaterBottle'
 import { getHydrationProgress } from '@guater/utils'
 import type { DiureticLog, DiureticPreset } from '@guater/types'
+import StreakBadge from '@/components/water/StreakBadge'
+import { useStreak } from '@/lib/useStreak'
+import { useFocusEffect } from 'expo-router'
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 
 const DEFAULT_WATER_AMOUNTS = [250, 500, 750]
 
@@ -25,6 +29,9 @@ const DEFAULT_DIURETIC_PRESETS: Omit<DiureticPreset, 'id' | 'user_id' | 'sort_or
 export default function DashboardScreen() {
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile(user?.id)
+  
+  const tabBarHeight = useBottomTabBarHeight()
+  
   const timezone = profile?.timezone ?? 'UTC'
   const goal = profile?.daily_goal_ml ?? 2500
 
@@ -38,8 +45,8 @@ export default function DashboardScreen() {
   function refresh() { setRefreshKey(k => k + 1) }
 
   const { waterLogs, diureticLogs, loading: logsLoading } = useTodayLogs(user?.id, timezone, refreshKey, dayOffset)
-  const { presets } = usePresets(user?.id)
-  const { presets: diureticUserPresets } = useDiureticPresets(user?.id)
+  const { presets, refresh: refreshPresets } = usePresets(user?.id)
+  const { presets: diureticUserPresets, refresh: refreshDiureticPresets } = useDiureticPresets(user?.id)
 
   const [addingWater, setAddingWater] = useState(false)
   const [addingDiuretic, setAddingDiuretic] = useState(false)
@@ -50,12 +57,13 @@ export default function DashboardScreen() {
   const [clearing, setClearing] = useState(false)
 
   const consumed = waterLogs.reduce((sum, log) => sum + log.amount_ml, 0)
-  const { percentage, remaining, overGoal } = getHydrationProgress(consumed, goal)
+  const { overGoal } = getHydrationProgress(consumed, goal)
   const netDiureticLoss = diureticLogs.reduce(
     (sum, log) => sum + Math.round(log.amount_ml * log.diuretic_factor), 0
   )
   const isOverGoal = overGoal > 0
-
+  const streak = useStreak(user?.id, goal, timezone)
+  
   const allWaterPresets = [
     ...DEFAULT_WATER_AMOUNTS.map(amount => ({
       id: `default-${amount}`,
@@ -116,6 +124,13 @@ export default function DashboardScreen() {
     }
   }
 
+  useFocusEffect(
+    useCallback(() => {
+      refreshPresets()
+      refreshDiureticPresets()
+    }, [refreshPresets, refreshDiureticPresets])
+  )
+
   async function handleDeleteLog(id: string, type: 'water' | 'diuretic') {
     if (deletingId) return
     setDeletingId(id)
@@ -167,7 +182,7 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface dark:bg-dark-surface">
-      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: tabBarHeight + 16 }}>
 
         {/* Header with day navigation */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 16 }}>
@@ -213,6 +228,11 @@ export default function DashboardScreen() {
             >
               <Text style={{ color: '#0D4F78', fontWeight: '700', fontSize: 16, lineHeight: 18 }}>›</Text>
             </TouchableOpacity>
+            {isToday && streak > 0 && (
+              <View>
+                <StreakBadge streak={streak} />
+              </View>
+            )}
           </View>
         </View>
 
