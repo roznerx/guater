@@ -24,7 +24,7 @@ interface SettingsClientProps {
 
 const selectClass = `
   border-2 border-blue-deep rounded-xl px-3 py-2.5 text-sm
-  text-text-primary dark:text-dark-text-primary
+  text-text-primary dark:text-blue-light
   outline-none bg-white dark:bg-dark-card
   shadow-[3px_3px_0_#0D4F78]
   focus:shadow-[1px_1px_0_#0D4F78]

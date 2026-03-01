@@ -21,7 +21,10 @@ export default function Input({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={inputId} className="text-sm font-semibold text-text-secondary">
+        <label
+          htmlFor={inputId}
+          className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary"
+        >
           {label}
         </label>
       )}
@@ -51,7 +54,7 @@ export default function Input({
         )}
       </div>
       {hint && (
-        <span id={hintId} className="text-xs text-text-muted">
+        <span id={hintId} className="text-xs text-text-muted dark:text-dark-text-muted">
           {hint}
         </span>
       )}

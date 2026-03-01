@@ -103,10 +103,10 @@ export default function DiureticPresetsManager({ presets }: DiureticPresetsManag
             <div className="flex items-center gap-3">
               <div
                 aria-hidden="true"
-                className="w-3 h-3 rounded-full border border-border flex-shrink-0"
+                className="w-3 h-3 rounded-full border border-border dark:border-dark-border flex-shrink-0"
                 style={{ backgroundColor: preset.color }}
               />
-              <span className="font-semibold text-sm text-text-primary dark:text-dark-text-primary">
+              <span className="text-xs font-semibold text-text-primary dark:text-blue-light text-center leading-tight">
                 {preset.label}
               </span>
               <span className="text-xs text-text-muted dark:text-dark-text-muted">
@@ -118,7 +118,7 @@ export default function DiureticPresetsManager({ presets }: DiureticPresetsManag
               onClick={() => handleDelete(preset.id)}
               disabled={deletingId === preset.id}
               aria-label={`Delete ${preset.label}`}
-              className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted dark:text-dark-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
               ✕
             </button>

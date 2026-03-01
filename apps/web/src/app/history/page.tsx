@@ -225,16 +225,16 @@ export default async function HistoryPage({
                     }
                   `}
                 >
-                  <span className={`text-xs font-semibold leading-none pl-2
-                  ${isFuture
-                    ? 'text-slate-soft dark:text-dark-border'
-                    : total === 0
-                      ? 'text-text-muted dark:text-dark-text-muted'
-                      : 'text-white'
-                  }
-                `}>
-                  {String(i + 1)}
-                </span>
+                  <span className={`text-xs font-semibold leading-none pl-2 select-none
+                    ${isFuture
+                      ? 'text-slate-soft dark:text-dark-border'
+                      : total === 0
+                        ? 'text-text-muted dark:text-blue-pale'
+                        : 'text-white'
+                    }
+                  `}>
+                    {String(i + 1)}
+                  </span>
                 </div>
               )
             })}
