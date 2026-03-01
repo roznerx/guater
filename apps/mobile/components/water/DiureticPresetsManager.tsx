@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView 
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import type { DiureticPreset } from '@guater/types'
+import { useThemeColors } from '@/lib/useThemeColors'
 
 const PALETTE = [
   { label: 'Blue Pale',  value: '#C8DCEE' },
@@ -40,10 +41,15 @@ interface DiureticPresetsManagerProps {
 
 const sectionLabel = { fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.5, color: '#94A8BA', textTransform: 'uppercase' as const, marginBottom: 6 }
 const fieldLabel = { fontSize: 13, fontWeight: '600' as const, color: '#4A6070', marginBottom: 6 }
-const inputStyle = { borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#0F2A3A', backgroundColor: '#ffffff' }
+const inputBase = {
+  borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
+  paddingHorizontal: 12, paddingVertical: 10, fontSize: 14,
+}
 
 export default function DiureticPresetsManager({ presets, onRefresh }: DiureticPresetsManagerProps) {
   const { user } = useAuth()
+  const c = useThemeColors()
+  
   const [adding, setAdding] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -121,18 +127,19 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
         {presets.map((preset) => (
           <View
             key={preset.id}
-            style={{
-              flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-              paddingHorizontal: 16, paddingVertical: 12,
-              borderRadius: 12, borderWidth: 2, borderColor: '#DDE8F0', backgroundColor: '#F4F8FB',
-            }}
-          >
+             style={{
+                flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+                paddingHorizontal: 16, paddingVertical: 12,
+                borderRadius: 12, borderWidth: 2, borderColor: c.border,
+                backgroundColor: c.cardAlt,
+              }}
+            >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
               <View style={{ width: 12, height: 12, borderRadius: 999, backgroundColor: preset.color, borderWidth: 1, borderColor: '#DDE8F0' }} />
-              <Text style={{ fontWeight: '600', fontSize: 14, color: '#0F2A3A' }}>
+              <Text style={{ fontWeight: '600', fontSize: 14, color: c.textPrimary }}>
                 {preset.label}
               </Text>
-              <Text style={{ fontSize: 12, color: '#94A8BA' }}>
+              <Text style={{ fontSize: 12, color: c.textMuted }}>
                 {preset.amount_ml} ml · {Math.round(preset.diuretic_factor * 100)}% diuretic
               </Text>
             </View>
@@ -143,14 +150,14 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
               style={{
                 width: 24, height: 24,
                 alignItems: 'center', justifyContent: 'center',
-                borderRadius: 6, borderWidth: 2, borderColor: '#DDE8F0',
-                backgroundColor: '#ffffff',
+                borderRadius: 6, borderWidth: 2, borderColor: c.border,
+                backgroundColor: c.card,
                 opacity: deletingId === preset.id ? 0.5 : 1,
               }}
             >
               {deletingId === preset.id
-                ? <ActivityIndicator size="small" color="#94A8BA" />
-                : <Text style={{ fontSize: 11, color: '#94A8BA' }}>✕</Text>
+                ? <ActivityIndicator size="small" color={c.textMuted} />
+                : <Text style={{ fontSize: 11, color: c.textMuted }}>✕</Text>
               }
             </TouchableOpacity>
           </View>
@@ -169,7 +176,7 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
                 borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
                 paddingHorizontal: 12, paddingVertical: 10,
                 flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-                backgroundColor: '#ffffff',
+                backgroundColor: c.card,
                 shadowColor: '#0D4F78', shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0,
               }}
             >
@@ -187,9 +194,9 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
                     onPress={() => handleTypeChange(type)}
                     style={{
                       paddingHorizontal: 16, paddingVertical: 11,
-                      backgroundColor: selectedType.label === type.label ? '#C8DCEE' : '#ffffff',
+                      backgroundColor: selectedType.label === type.label ? c.selectedBg : c.card,
                       borderTopWidth: i > 0 ? 1 : 0,
-                      borderTopColor: '#DDE8F0',
+                      borderTopColor: c.border,
                     }}
                   >
                     <Text style={{ fontSize: 14, color: '#0D4F78', fontWeight: selectedType.label === type.label ? '700' : '400' }}>
@@ -210,7 +217,11 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
                 onChangeText={setNameValue}
                 placeholder="e.g. My morning coffee"
                 placeholderTextColor="#94A8BA"
-                style={inputStyle}
+                style={{
+                  ...inputBase,
+                  color: c.textPrimary,
+                  backgroundColor: c.inputBg,
+                }}
               />
             </View>
             <View style={{ width: 100 }}>
@@ -221,7 +232,11 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
                 placeholder="250"
                 placeholderTextColor="#94A8BA"
                 keyboardType="numeric"
-                style={inputStyle}
+                style={{
+                ...inputBase,
+                color: c.textPrimary,
+                backgroundColor: c.inputBg,
+              }}
               />
             </View>
           </View>

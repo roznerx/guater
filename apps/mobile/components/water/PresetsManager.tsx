@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'reac
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import type { QuickPreset } from '@guater/types'
+import { useThemeColors } from '@/lib/useThemeColors'
 
 interface PresetsManagerProps {
   presets: QuickPreset[]
@@ -10,10 +11,15 @@ interface PresetsManagerProps {
 }
 
 const fieldLabel = { fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.5, color: '#94A8BA', textTransform: 'uppercase' as const, marginBottom: 6 }
-const inputStyle = { borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#0F2A3A', backgroundColor: '#ffffff' }
+
+const inputBase = {
+  borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
+  paddingHorizontal: 12, paddingVertical: 10, fontSize: 14,
+}
 
 export default function PresetsManager({ presets, onRefresh }: PresetsManagerProps) {
   const { user } = useAuth()
+  const c = useThemeColors()
   const [adding, setAdding] = useState(false)
   const [label, setLabel] = useState('')
   const [amount, setAmount] = useState('')
@@ -73,14 +79,15 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
             style={{
               flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
               paddingHorizontal: 16, paddingVertical: 12,
-              borderRadius: 12, borderWidth: 2, borderColor: '#DDE8F0', backgroundColor: '#F4F8FB',
+              borderRadius: 12, borderWidth: 2, borderColor: c.border,
+              backgroundColor: c.cardAlt,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontWeight: '600', fontSize: 14, color: '#0F2A3A' }}>
+              <Text style={{ fontWeight: '600', fontSize: 14, color: c.textPrimary }}>
                 {preset.label}
               </Text>
-              <Text style={{ fontSize: 13, color: '#94A8BA' }}>
+              <Text style={{ fontSize: 13, color: c.textMuted }}>
                 {preset.amount_ml} ml
               </Text>
             </View>
@@ -91,8 +98,8 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
               style={{
                 width: 24, height: 24,
                 alignItems: 'center', justifyContent: 'center',
-                borderRadius: 6, borderWidth: 2, borderColor: '#DDE8F0',
-                backgroundColor: '#ffffff',
+                borderRadius: 6, borderWidth: 2, borderColor: c.border,
+                backgroundColor: c.card,
                 opacity: deletingId === preset.id ? 0.5 : 1,
               }}
             >
@@ -115,7 +122,9 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
                 onChangeText={setLabel}
                 placeholder="e.g. Contigo"
                 placeholderTextColor="#94A8BA"
-                style={inputStyle}
+                style={{
+                  ...inputBase, color: c.textPrimary, backgroundColor: c.inputBg
+                }}
               />
             </View>
             <View style={{ width: 100 }}>
@@ -126,7 +135,9 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
                 placeholder="591"
                 placeholderTextColor="#94A8BA"
                 keyboardType="numeric"
-                style={inputStyle}
+                style={{
+                  ...inputBase, color: c.textPrimary, backgroundColor: c.inputBg
+                }}
               />
             </View>
           </View>
@@ -161,8 +172,7 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
         <TouchableOpacity
           onPress={() => setAdding(true)}
           style={{
-            borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
-            paddingVertical: 12, alignItems: 'center',
+            borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12, paddingVertical: 12, alignItems: 'center',backgroundColor: c.card,
           }}
         >
           <Text style={{ fontWeight: '600', fontSize: 14, color: '#0D4F78' }}>+ Add container</Text>

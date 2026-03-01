@@ -11,6 +11,8 @@ import Card from '@/components/ui/Card'
 import PresetsManager from '@/components/water/PresetsManager'
 import DiureticPresetsManager from '@/components/water/DiureticPresetsManager'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
+import { useTheme, type ThemePreference } from '@/lib/ThemeContext'
+import { useThemeColors } from '@/lib/useThemeColors'
 
 const ACTIVITY_LEVELS = [
   { value: 'sedentary',   label: 'Sedentary',   description: 'Mostly sitting' },
@@ -41,15 +43,12 @@ const TIMEZONES = [
   { value: 'Europe/Paris',                   label: 'Paris (CET)' },
 ]
 
-function SegmentedControl({
-  options,
-  value,
-  onChange,
-}: {
+function SegmentedControl({ options, value, onChange }: {
   options: { value: string; label: string }[]
   value: string
   onChange: (v: string) => void
 }) {
+  const c = useThemeColors()
   return (
     <View style={{ flexDirection: 'row', borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12, overflow: 'hidden' }}>
       {options.map((opt, i) => (
@@ -60,7 +59,7 @@ function SegmentedControl({
             flex: 1,
             paddingVertical: 10,
             alignItems: 'center',
-            backgroundColor: value === opt.value ? '#0D4F78' : '#ffffff',
+            backgroundColor: value === opt.value ? '#0D4F78' : c.card,
             borderLeftWidth: i > 0 ? 2 : 0,
             borderLeftColor: '#0D4F78',
           }}
@@ -74,15 +73,12 @@ function SegmentedControl({
   )
 }
 
-function OptionList({
-  options,
-  value,
-  onChange,
-}: {
+function OptionList({ options, value, onChange }: {
   options: { value: string; label: string; description?: string }[]
   value: string
   onChange: (v: string) => void
 }) {
+  const c = useThemeColors()
   return (
     <View style={{ borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12, overflow: 'hidden' }}>
       {options.map((opt, i) => (
@@ -95,23 +91,23 @@ function OptionList({
             justifyContent: 'space-between',
             paddingHorizontal: 16,
             paddingVertical: 12,
-            backgroundColor: value === opt.value ? '#C8DCEE' : '#ffffff',
+            backgroundColor: value === opt.value ? c.selectedBg : c.card,
             borderTopWidth: i > 0 ? 2 : 0,
-            borderTopColor: '#DDE8F0',
+            borderTopColor: c.border,
           }}
         >
           <View>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: '#0D4F78' }}>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: c.selectedText }}>
               {opt.label}
             </Text>
             {opt.description && (
-              <Text style={{ fontSize: 12, color: '#94A8BA', marginTop: 1 }}>
+              <Text style={{ fontSize: 12, color: c.textMuted, marginTop: 1 }}>
                 {opt.description}
               </Text>
             )}
           </View>
           {value === opt.value && (
-            <Text style={{ color: '#0D4F78', fontWeight: '700' }}>✓</Text>
+            <Text style={{ color: c.selectedText, fontWeight: '700' }}>✓</Text>
           )}
         </TouchableOpacity>
       ))}
@@ -135,21 +131,11 @@ function FieldLabel({ label }: { label: string }) {
   )
 }
 
-const inputStyle = {
-  borderWidth: 2,
-  borderColor: '#0D4F78',
-  borderRadius: 12,
-  paddingHorizontal: 12,
-  paddingVertical: 10,
-  fontSize: 14,
-  color: '#0F2A3A',
-  backgroundColor: '#ffffff',
-}
-
 export default function SettingsScreen() {
   const { user } = useAuth()
   const { profile, loading, refresh: refreshProfile } = useProfile(user?.id)
 
+  const c = useThemeColors()
   const tabBarHeight = useBottomTabBarHeight()
   
   const [presetsRefreshKey, setPresetsRefreshKey] = useState(0)
@@ -157,6 +143,7 @@ export default function SettingsScreen() {
 
   const { presets } = usePresets(user?.id, presetsRefreshKey)
   const { presets: diureticPresets } = useDiureticPresets(user?.id, diureticPresetsRefreshKey)
+  const { theme, setTheme } = useTheme()
 
   const [saving, setSaving] = useState(false)
   const [displayName, setDisplayName] = useState('')
@@ -167,6 +154,17 @@ export default function SettingsScreen() {
   const [dailyGoal, setDailyGoal] = useState('2500')
   const [unit, setUnit] = useState<'ml' | 'oz'>('ml')
   const [timezone, setTimezone] = useState('UTC')
+
+  const inputStyle = {
+    borderWidth: 2,
+    borderColor: '#0D4F78',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: c.textPrimary,
+    backgroundColor: c.inputBg,
+  }
 
   useEffect(() => {
     if (!profile) return
@@ -375,6 +373,20 @@ export default function SettingsScreen() {
           <DiureticPresetsManager
             presets={diureticPresets}
             onRefresh={() => setDiureticPresetsRefreshKey(k => k + 1)}
+          />
+        </Card>
+
+        {/* Appearance */}
+        <Card className="mb-4">
+          <SectionLabel label="Appearance" />
+          <SegmentedControl
+            options={[
+              { value: 'light',  label: 'Light' },
+              { value: 'system', label: 'System' },
+              { value: 'dark',   label: 'Dark' },
+            ]}
+            value={theme}
+            onChange={(v) => setTheme(v as ThemePreference)}
           />
         </Card>
 
