@@ -15,6 +15,7 @@ import StreakBadge from '@/components/water/StreakBadge'
 import { useStreak } from '@/lib/useStreak'
 import { useFocusEffect } from 'expo-router'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
+import { useThemeColors } from '@/lib/useThemeColors'
 
 const DEFAULT_WATER_AMOUNTS = [250, 500, 750]
 
@@ -31,6 +32,7 @@ export default function DashboardScreen() {
   const { profile, loading: profileLoading } = useProfile(user?.id)
   
   const tabBarHeight = useBottomTabBarHeight()
+  const c = useThemeColors()
   
   const timezone = profile?.timezone ?? 'UTC'
   const goal = profile?.daily_goal_ml ?? 2500
@@ -199,7 +201,7 @@ export default function DashboardScreen() {
                 width: 32, height: 32,
                 alignItems: 'center', justifyContent: 'center',
                 borderRadius: 10, borderWidth: 2, borderColor: '#0D4F78',
-                backgroundColor: '#ffffff',
+                backgroundColor: c.card,
                 shadowColor: '#0D4F78', shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0,
               }}
             >
@@ -207,7 +209,7 @@ export default function DashboardScreen() {
             </TouchableOpacity>
             <View style={{
               borderRadius: 999, borderWidth: 2, borderColor: '#0D4F78',
-              backgroundColor: '#C8DCEE', paddingHorizontal: 12, paddingVertical: 4,
+              backgroundColor: c.selectedBg, paddingHorizontal: 12, paddingVertical: 4,
               shadowColor: '#0D4F78', shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0,
             }}>
               <Text style={{ fontSize: 13, fontWeight: '600', color: '#4A6070' }}>
@@ -221,9 +223,8 @@ export default function DashboardScreen() {
                 width: 32, height: 32,
                 alignItems: 'center', justifyContent: 'center',
                 borderRadius: 10, borderWidth: 2, borderColor: '#0D4F78',
-                backgroundColor: '#ffffff',
+                backgroundColor: c.card,
                 shadowColor: '#0D4F78', shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0,
-                opacity: isToday ? 0.3 : 1,
               }}
             >
               <Text style={{ color: '#0D4F78', fontWeight: '700', fontSize: 16, lineHeight: 18 }}>›</Text>
@@ -275,9 +276,9 @@ export default function DashboardScreen() {
                   key={preset.id}
                   onPress={() => handleQuickAdd(preset.amount_ml)}
                   disabled={addingWater}
-                  className={`border-2 border-blue-deep bg-blue-pale rounded-xl px-4 py-2 ${addingWater ? 'opacity-50' : ''}`}
+                  className={`border-2 border-blue-deep bg-blue-pale dark:bg-dark-card rounded-xl px-4 py-2 ${addingWater ? 'opacity-50' : ''}`}
                 >
-                  <Text className="text-sm font-semibold text-blue-deep">
+                  <Text className="text-sm font-semibold text-blue-deep dark:text-blue-light">
                     {preset.label}
                   </Text>
                 </TouchableOpacity>
@@ -292,7 +293,7 @@ export default function DashboardScreen() {
             {showCustomInput && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
                 <TextInput
-                  style={{ flex: 1, borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#0F2A3A', backgroundColor: '#ffffff' }}
+                  style={{ flex: 1, borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: c.textPrimary, backgroundColor: c.inputBg }}
                   placeholder="Amount in ml"
                   placeholderTextColor="#94A8BA"
                   keyboardType="numeric"
@@ -355,7 +356,7 @@ export default function DashboardScreen() {
                   }}
                 >
                   <Text style={{ fontSize: 13, fontWeight: '600', color: preset.color }}>
-                    {preset.label}
+                    {preset.label} 
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -398,21 +399,21 @@ export default function DashboardScreen() {
                       flexDirection: 'row',
                       justifyContent: 'space-between',
                       alignItems: 'center',
+                      borderWidth: 2,
+                      borderColor: '#0D4F78',
+                      borderRadius: 12,
                       paddingHorizontal: 16,
                       paddingVertical: 12,
-                      borderRadius: 12,
-                      borderWidth: 2,
-                      borderColor: '#DDE8F0',
-                      backgroundColor: '#F4F8FB',
+                      backgroundColor: c.inputBg, 
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
                       <Text>{type === 'water' ? '💧' : '☕'}</Text>
-                      <Text style={{ fontWeight: '600', color: '#0F2A3A', fontSize: 14 }}>
+                      <Text style={{ fontWeight: '600', color: c.selectedText, fontSize: 14 }}>
                         {type === 'water' ? `${log.amount_ml} ml` : diureticLog!.label}
                       </Text>
                       {diureticLog && (
-                        <Text style={{ fontSize: 12, color: '#94A8BA' }}>
+                        <Text style={{ fontSize: 12, color: c.textMuted }}>
                           {diureticLog.amount_ml} ml
                         </Text>
                       )}
@@ -434,8 +435,8 @@ export default function DashboardScreen() {
                           style={{
                             width: 24, height: 24,
                             alignItems: 'center', justifyContent: 'center',
-                            borderRadius: 6, borderWidth: 2, borderColor: '#DDE8F0',
-                            backgroundColor: '#ffffff',
+                            borderRadius: 6, borderWidth: 2, borderColor: c.border,
+                            backgroundColor: c.card,
                             opacity: isDeleting ? 0.5 : 1,
                           }}
                         >
@@ -463,20 +464,20 @@ export default function DashboardScreen() {
         onRequestClose={() => setShowClearConfirm(false)}
       >
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-          <View style={{ width: '100%', backgroundColor: '#ffffff', borderRadius: 16, borderWidth: 2, borderColor: '#DDE8F0', padding: 24 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#0F2A3A', marginBottom: 8 }}>
+          <View style={{ width: '100%', backgroundColor: c.card, borderRadius: 16, borderWidth: 2, borderColor: c.border, padding: 24 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: c.textPrimary, marginBottom: 8 }}>
               Clear all logs?
             </Text>
-            <Text style={{ fontSize: 14, color: '#94A8BA', marginBottom: 24 }}>
+            <Text style={{ fontSize: 14, color: c.textMuted, marginBottom: 24 }}>
               This will delete all water and diuretic logs for this day.
             </Text>
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity
                 onPress={() => setShowClearConfirm(false)}
                 disabled={clearing}
-                style={{ flex: 1, borderWidth: 2, borderColor: '#DDE8F0', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
+                style={{ flex: 1, borderWidth: 2, borderColor: c.border, borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
               >
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#94A8BA' }}>Cancel</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: c.textMuted }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleClearAll}

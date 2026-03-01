@@ -1,6 +1,7 @@
 import Svg, { Defs, ClipPath, Rect, Path, LinearGradient, Stop, G } from 'react-native-svg'
 import { View, Text } from 'react-native'
 import { getHydrationProgress } from '@guater/utils'
+import { useThemeColors } from '@/lib/useThemeColors'
 
 interface WaterBottleProps {
   consumed: number
@@ -9,6 +10,7 @@ interface WaterBottleProps {
 
 export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
   const { percentage, remaining, overGoal } = getHydrationProgress(consumed, goal)
+  const c = useThemeColors()
 
   const W = 72
   const H = 140
@@ -35,7 +37,6 @@ export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
 
   return (
     <View style={{ height: H, position: 'relative' }}>
-      {/* Bottle absolutely positioned on the left */}
       <View style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }}>
         <Svg width={W} height={H}>
           <Defs>
@@ -47,7 +48,8 @@ export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
               <Stop offset="1" stopColor="#3E8FC0" />
             </LinearGradient>
           </Defs>
-          <Path d={bottlePath} fill="#F4F8FB" stroke="#0D4F78" strokeWidth={2.5} />
+          {/* Bottle body — theme-aware fill */}
+          <Path d={bottlePath} fill={c.cardAlt} stroke="#0D4F78" strokeWidth={2.5} />
           <G clipPath="url(#bottle-clip)">
             <Rect x={0} y={fillY} width={W} height={fillHeight} fill="url(#water-grad)" />
           </G>
@@ -55,7 +57,6 @@ export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
         </Svg>
       </View>
 
-      {/* Stats offset by bottle width */}
       <View style={{ paddingLeft: W + 16, height: H, justifyContent: 'center' }}>
         <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#0D4F78' }}>
           {percentage}%
@@ -63,18 +64,14 @@ export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
         <Text style={{ fontSize: 14, fontWeight: '600', color: '#1A6FA0', marginTop: 2 }}>
           {consumed.toLocaleString()} ml
         </Text>
-        <Text style={{ fontSize: 13, color: '#94A8BA', marginTop: 2 }}>
-          {isFull
-            ? 'Goal reached! 🌊'
-            : `${remaining.toLocaleString()} ml to go`
-          }
+        <Text style={{ fontSize: 13, color: c.textMuted, marginTop: 2 }}>
+          {isFull ? 'Goal reached! 🌊' : `${remaining.toLocaleString()} ml to go`}
         </Text>
         {overGoal > 0 && (
           <Text style={{ fontSize: 12, color: '#2AABA2', marginTop: 2 }}>
             +{overGoal.toLocaleString()} ml over goal
           </Text>
         )}
-        {/* Progress bar */}
         <View style={{
           height: 12,
           marginTop: 10,
@@ -82,7 +79,7 @@ export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
           borderWidth: 2,
           borderColor: '#0D4F78',
           overflow: 'hidden',
-          backgroundColor: '#E8EEF4',
+          backgroundColor: c.progressTrack,
         }}>
           <View style={{
             height: '100%',

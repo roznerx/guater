@@ -5,6 +5,7 @@ import { router } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import AuthHeader from '@/components/ui/AuthHeader'
 import AuthBanner from '@/components/ui/AuthBanner'
+import { useThemeColors } from '@/lib/useThemeColors'
 
 export default function ResetPasswordScreen() {
   const [password, setPassword] = useState('')
@@ -14,6 +15,19 @@ export default function ResetPasswordScreen() {
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false)
   const [tokenError, setTokenError] = useState(false)
+  const c = useThemeColors()
+
+  const inputStyle = {
+    borderWidth: 2,
+    borderColor: '#0D4F78',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingRight: 64,
+    fontSize: 14,
+    color: c.textPrimary,
+    backgroundColor: c.inputBg,
+  }
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -45,18 +59,14 @@ export default function ResetPasswordScreen() {
       setError('Passwords do not match.')
       return
     }
-
     setError('')
     setLoading(true)
-
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password })
-
       if (updateError) {
         setError(updateError.message)
         return
       }
-
       await supabase.auth.signOut({ scope: 'global' })
       router.replace('/(auth)/login')
     } finally {
@@ -108,7 +118,6 @@ export default function ResetPasswordScreen() {
 
         {error ? <AuthBanner message={error} type="error" /> : null}
 
-        {/* New password */}
         <View className="mb-4">
           <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-2">
             New password
@@ -122,17 +131,7 @@ export default function ResetPasswordScreen() {
               placeholderTextColor="#94A8BA"
               autoCapitalize="none"
               returnKeyType="next"
-              style={{
-                borderWidth: 2,
-                borderColor: '#0D4F78',
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 12,
-                paddingRight: 64,
-                fontSize: 14,
-                color: '#0F2A3A',
-                backgroundColor: '#ffffff',
-              }}
+              style={inputStyle}
             />
             <TouchableOpacity
               onPress={() => setShowPassword(v => !v)}
@@ -149,7 +148,6 @@ export default function ResetPasswordScreen() {
           </Text>
         </View>
 
-        {/* Confirm password */}
         <View className="mb-6">
           <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-2">
             Confirm password
@@ -164,17 +162,7 @@ export default function ResetPasswordScreen() {
               autoCapitalize="none"
               returnKeyType="done"
               onSubmitEditing={handleSubmit}
-              style={{
-                borderWidth: 2,
-                borderColor: '#0D4F78',
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 12,
-                paddingRight: 64,
-                fontSize: 14,
-                color: '#0F2A3A',
-                backgroundColor: '#ffffff',
-              }}
+              style={inputStyle}
             />
             <TouchableOpacity
               onPress={() => setShowPassword(v => !v)}
@@ -188,7 +176,6 @@ export default function ResetPasswordScreen() {
           </View>
         </View>
 
-        {/* Submit */}
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={loading}

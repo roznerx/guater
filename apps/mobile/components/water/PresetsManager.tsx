@@ -10,7 +10,7 @@ interface PresetsManagerProps {
   onRefresh: () => void
 }
 
-const fieldLabel = { fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.5, color: '#94A8BA', textTransform: 'uppercase' as const, marginBottom: 6 }
+
 
 const inputBase = {
   borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
@@ -63,6 +63,8 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
     }
   }
 
+  const fieldLabel = { fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.5, color: '#94A8BA', textTransform: 'uppercase' as const, marginBottom: 6 }
+
   return (
     <View>
       <Text style={fieldLabel}>Quick add containers</Text>
@@ -84,7 +86,7 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontWeight: '600', fontSize: 14, color: c.textPrimary }}>
+              <Text style={{ fontWeight: '600', fontSize: 14, color: c.selectedText }}>
                 {preset.label}
               </Text>
               <Text style={{ fontSize: 13, color: c.textMuted }}>
@@ -160,13 +162,13 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
               onPress={() => { setAdding(false); setLabel(''); setAmount('') }}
               disabled={saving}
               style={{
-                flex: 1, borderWidth: 2, borderColor: '#DDE8F0', borderRadius: 12,
+                flex: 1, borderWidth: 2, borderColor: c.border, borderRadius: 12,
                 paddingVertical: 12, alignItems: 'center',
               }}
             >
-              <Text style={{ fontWeight: '600', fontSize: 14, color: '#94A8BA' }}>Cancel</Text>
+              <Text style={{ fontWeight: '600', fontSize: 14, color: c.textMuted }}>Cancel</Text>
             </TouchableOpacity>
-          </View>
+                      </View>
         </View>
       ) : (
         <TouchableOpacity

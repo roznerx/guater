@@ -13,6 +13,7 @@ import DiureticPresetsManager from '@/components/water/DiureticPresetsManager'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import { useTheme, type ThemePreference } from '@/lib/ThemeContext'
 import { useThemeColors } from '@/lib/useThemeColors'
+import { deleteAccount } from '@/lib/deleteAccount'
 
 const ACTIVITY_LEVELS = [
   { value: 'sedentary',   label: 'Sedentary',   description: 'Mostly sitting' },
@@ -64,7 +65,7 @@ function SegmentedControl({ options, value, onChange }: {
             borderLeftColor: '#0D4F78',
           }}
         >
-          <Text style={{ fontSize: 13, fontWeight: '600', color: value === opt.value ? '#ffffff' : '#0D4F78' }}>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: value === opt.value ? '#ffffff' : c.selectedText }}>
             {opt.label}
           </Text>
         </TouchableOpacity>
@@ -116,16 +117,18 @@ function OptionList({ options, value, onChange }: {
 }
 
 function SectionLabel({ label }: { label: string }) {
+  const c = useThemeColors()
   return (
-    <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.5, color: '#94A8BA', textTransform: 'uppercase', marginBottom: 8 }}>
+    <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.5, color: c.textMuted, textTransform: 'uppercase', marginBottom: 8 }}>
       {label}
     </Text>
   )
 }
 
 function FieldLabel({ label }: { label: string }) {
+  const c = useThemeColors()
   return (
-    <Text style={{ fontSize: 13, fontWeight: '600', color: '#4A6070', marginBottom: 6 }}>
+    <Text style={{ fontSize: 13, fontWeight: '600', color: c.textSecondary, marginBottom: 6 }}>
       {label}
     </Text>
   )
@@ -134,6 +137,7 @@ function FieldLabel({ label }: { label: string }) {
 export default function SettingsScreen() {
   const { user } = useAuth()
   const { profile, loading, refresh: refreshProfile } = useProfile(user?.id)
+  const [deleting, setDeleting] = useState(false)
 
   const c = useThemeColors()
   const tabBarHeight = useBottomTabBarHeight()
@@ -225,6 +229,41 @@ export default function SettingsScreen() {
     ])
   }
 
+  async function handleDeleteAccount() {
+    Alert.alert(
+      'Delete account',
+      'This will permanently delete your account and all your data — logs, presets, and settings. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete account',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Are you absolutely sure?',
+              'Your data cannot be recovered after deletion.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Yes, delete everything',
+                  style: 'destructive',
+                  onPress: async () => {
+                    setDeleting(true)
+                    const { error } = await deleteAccount()
+                    setDeleting(false)
+                    if (error) {
+                      Alert.alert('Error', error)
+                    }
+                  },
+                },
+              ]
+            )
+          },
+        },
+      ]
+    )
+  }
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-surface dark:bg-dark-surface">
@@ -308,13 +347,13 @@ export default function SettingsScreen() {
             borderColor: '#0D4F78',
             borderRadius: 16,
             padding: 16,
-            backgroundColor: '#C8DCEE',
+            backgroundColor: c.selectedBg,
           }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.5, color: '#1A6FA0', textTransform: 'uppercase', marginBottom: 6 }}>
-              Recommended intake
-            </Text>
+             <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.5, color: '#1A6FA0', textTransform: 'uppercase', marginBottom: 6 }}>
+                Recommended intake
+              </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#0D4F78' }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: c.selectedText }}>
                 {recommended.toLocaleString()} ml / day
               </Text>
               <TouchableOpacity onPress={() => setDailyGoal(String(recommended))}>
@@ -410,22 +449,38 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         {/* Account */}
-        <Card>
+        <Card className="mb-4">
           <SectionLabel label="Account" />
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={{
-              borderWidth: 2,
-              borderColor: '#DDE8F0',
-              borderRadius: 12,
-              paddingVertical: 12,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#94A8BA' }}>
-              Log out
-            </Text>
-          </TouchableOpacity>
+          <View style={{ gap: 12 }}>
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={{
+                borderWidth: 2, borderColor: c.border,
+                borderRadius: 12, paddingVertical: 12, alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '600', color: c.textMuted }}>
+                Log out
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleDeleteAccount}
+              disabled={deleting}
+              style={{
+                borderWidth: 2, borderColor: '#D95F5F',
+                borderRadius: 12, paddingVertical: 12, alignItems: 'center',
+                opacity: deleting ? 0.5 : 1,
+              }}
+            >
+              {deleting
+                ? <ActivityIndicator size="small" color="#D95F5F" />
+                : <Text style={{ fontSize: 14, fontWeight: '600', color: '#D95F5F' }}>
+                    Delete account
+                  </Text>
+              }
+            </TouchableOpacity>
+          </View>
         </Card>
 
       </ScrollView>

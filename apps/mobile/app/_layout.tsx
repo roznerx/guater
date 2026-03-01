@@ -6,20 +6,32 @@ import { useColorScheme } from 'nativewind'
 import { AuthProvider, useAuth } from '@/lib/AuthContext'
 import { ThemeProvider, useTheme } from '@/lib/ThemeContext'
 import '../global.css'
+import { useProfile } from '@/lib/useProfile'
 
 function AuthGate() {
   const { user, loading } = useAuth()
+  const { profile, loading: profileLoading } = useProfile(user?.id)
   const segments = useSegments()
 
   useEffect(() => {
-    if (loading) return
+    if (loading || profileLoading) return
     const inAuthGroup = segments[0] === '(auth)'
+    const inOnboarding = segments[0] === '(onboarding)'
+
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/login')
     } else if (user && inAuthGroup) {
-      router.replace('/(tabs)')
+      if (profile && !profile.onboarding_completed) {
+        router.replace('/(onboarding)/index')
+      } else {
+        router.replace('/(tabs)')
+      }
+    } else if (user && !inAuthGroup && !inOnboarding) {
+      if (profile && !profile.onboarding_completed) {
+        router.replace('/(onboarding)/index')
+      }
     }
-  }, [user, loading, segments])
+  }, [user, loading, profile, profileLoading, segments])
 
   return null
 }

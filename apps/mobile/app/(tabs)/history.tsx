@@ -8,6 +8,7 @@ import { getHydrationProgress, getMonthBounds } from '@guater/utils'
 import Card from '@/components/ui/Card'
 import type { WaterLog } from '@guater/types'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
+import { useThemeColors } from '@/lib/useThemeColors'
 
 function groupByDay(
   logs: Pick<WaterLog, 'logged_at' | 'amount_ml'>[],
@@ -32,6 +33,7 @@ export default function HistoryScreen() {
   const { profile, loading: profileLoading } = useProfile(user?.id)
   
   const tabBarHeight = useBottomTabBarHeight()
+  const c = useThemeColors()
 
   const timezone = profile?.timezone ?? 'UTC'
   const goal = profile?.daily_goal_ml ?? 2500
@@ -84,7 +86,7 @@ export default function HistoryScreen() {
         width: 32, height: 32,
         alignItems: 'center', justifyContent: 'center',
         borderRadius: 10, borderWidth: 2, borderColor: '#0D4F78',
-        backgroundColor: '#ffffff',
+        backgroundColor: c.card,
         shadowColor: '#0D4F78', shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0,
         opacity: disabled ? 0.3 : 1,
       }}
@@ -177,7 +179,7 @@ export default function HistoryScreen() {
                         )}
                       </View>
                     </View>
-                    <View style={{ height: 12, borderRadius: 999, borderWidth: 2, borderColor: '#0D4F78', overflow: 'hidden', backgroundColor: '#E8EEF4' }}>
+                    <View style={{ height: 12, borderRadius: 999, borderWidth: 2, borderColor: '#0D4F78', overflow: 'hidden', backgroundColor: c.progressTrack }}>
                       <View style={{ height: '100%', borderRadius: 999, backgroundColor: reached ? '#2AABA2' : '#1A6FA0', width: `${percentage}%` }} />
                     </View>
                   </View>
@@ -194,10 +196,10 @@ export default function HistoryScreen() {
             {navButton(() => setMonthOffset(o => o - 1), '‹', false)}
             <View style={{
               borderRadius: 999, borderWidth: 2, borderColor: '#0D4F78',
-              backgroundColor: '#C8DCEE', paddingHorizontal: 12, paddingVertical: 4,
+              backgroundColor: c.selectedBg, paddingHorizontal: 12, paddingVertical: 4,
               shadowColor: '#0D4F78', shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0,
             }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#4A6070' }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: c.textSecondary }}>
                 {label}
               </Text>
             </View>
@@ -220,7 +222,7 @@ export default function HistoryScreen() {
                 const bgColor = isFuture
                   ? 'transparent'
                   : total === 0
-                    ? '#E8EEF4'
+                    ? c.progressTrack
                     : pct >= 1
                       ? '#2AABA2'
                       : pct >= 0.5
@@ -240,7 +242,7 @@ export default function HistoryScreen() {
                       borderRadius: 4,
                       borderWidth: 2,
                       borderStyle: isFuture ? 'dashed' : 'solid',
-                      borderColor: isToday ? '#0D4F78' : isFuture ? '#DDE8F0' : 'transparent',
+                      borderColor: isToday ? '#0D4F78' : isFuture ? c.border : 'transparent',
                       backgroundColor: bgColor,
                     }}
                   >
@@ -265,13 +267,13 @@ export default function HistoryScreen() {
           {/* Legend */}
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
             {[
-              { color: '#E8EEF4', label: 'None' },
+              { color: c.progressTrack, label: 'None' },
               { color: '#7FB8D8', label: '<50%' },
               { color: '#1A6FA0', label: '<100%' },
               { color: '#2AABA2', label: 'Goal' },
             ].map(({ color, label: l }) => (
               <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                <View style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: color, borderWidth: 1, borderColor: '#DDE8F0' }} />
+                <View style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: color, borderWidth: 1, borderColor: c.border }} />
                 <Text className="text-xs text-text-muted dark:text-dark-text-muted">{l}</Text>
               </View>
             ))}
