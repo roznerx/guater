@@ -1,4 +1,4 @@
-import { useTheme } from './ThemeContext'
+import { useTheme } from "../context/ThemeContext"
 
 export function useThemeColors() {
   const { resolvedTheme } = useTheme()

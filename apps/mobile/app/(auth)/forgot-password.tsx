@@ -1,33 +1,45 @@
 import { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { Link } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import AuthHeader from '@/components/ui/AuthHeader'
 import AuthBanner from '@/components/ui/AuthBanner'
+import Input from '@/components/ui/Input'
+import { EMAIL_REGEX } from '@guater/utils'
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
+  const [sent, setSent] = useState(false)
 
   async function handleReset() {
-    if (!email) {
+    const trimmed = email.trim()
+    if (!trimmed) {
       setError('Please enter your email.')
+      return
+    }
+    if (!EMAIL_REGEX.test(trimmed)) {
+      setError('Please enter a valid email address.')
       return
     }
     setLoading(true)
     setError(null)
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
         redirectTo: 'guater://reset-password',
       })
-      if (error) setError(error.message)
-      else setMessage('Check your email for a password reset link.')
+      if (resetError) {
+        setError(resetError.message)
+      } else {
+        setSent(true)
+      }
     } finally {
       setLoading(false)
     }
   }
+
+  const isDisabled = loading || sent
 
   return (
     <KeyboardAvoidingView
@@ -38,35 +50,36 @@ export default function ForgotPasswordScreen() {
         <AuthHeader subtitle="Reset your password" />
 
         {error && <AuthBanner message={error} type="error" />}
-        {message && <AuthBanner message={message} type="success" />}
+        {sent && (
+          <AuthBanner message="Check your email for a password reset link." type="success" />
+        )}
 
         <View className="flex flex-col gap-4">
-          <View>
-            <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1.5">
-              Email
-            </Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              placeholderTextColor="#94A8BA"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              returnKeyType="done"
-              onSubmitEditing={handleReset}
-              className="border-2 border-blue-deep rounded-xl px-3 py-3 text-sm text-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-card"
-            />
-          </View>
+          <Input
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={handleReset}
+            editable={!sent}
+          />
 
           <TouchableOpacity
             onPress={handleReset}
-            disabled={loading}
-            className="bg-blue-deep rounded-xl py-3.5 items-center mt-2 disabled:opacity-50"
+            disabled={isDisabled}
+            style={{ opacity: isDisabled ? 0.5 : 1 }}
+            className="bg-blue-deep rounded-xl py-3.5 items-center mt-2"
           >
             {loading
               ? <ActivityIndicator color="white" />
-              : <Text className="text-white font-semibold text-base">Send reset link</Text>
+              : <Text className="text-white font-semibold text-base">
+                  {sent ? 'Email sent' : 'Send reset link'}
+                </Text>
             }
           </TouchableOpacity>
         </View>

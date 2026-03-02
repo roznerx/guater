@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { supabase } from './supabase'
 import { getTodayRange } from '@guater/utils'
 import type { WaterLog, DiureticLog } from '@guater/types'
+import { supabase } from '../supabase'
 
 export { getTodayRange }
 

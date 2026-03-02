@@ -1,21 +1,21 @@
 import { useCallback, useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useAuth } from '@/lib/AuthContext'
-import { useProfile } from '@/lib/useProfile'
-import { usePresets } from '@/lib/usePresets'
-import { useTodayLogs, getTodayRange } from '@/lib/useTodayLogs'
-import { useDiureticPresets } from '@/lib/useDiureticPresets'
 import { supabase } from '@/lib/supabase'
 import Card from '@/components/ui/Card'
 import WaterBottle from '@/components/water/WaterBottle'
-import { getHydrationProgress } from '@guater/utils'
+import { getHydrationProgress, getTodayRange } from '@guater/utils'
 import type { DiureticLog, DiureticPreset } from '@guater/types'
 import StreakBadge from '@/components/water/StreakBadge'
-import { useStreak } from '@/lib/useStreak'
 import { useFocusEffect } from 'expo-router'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
-import { useThemeColors } from '@/lib/useThemeColors'
+import { useAuth } from '@/lib/context/AuthContext'
+import { useProfileContext } from '@/lib/context/ProfileContext'
+import { useDiureticPresets } from '@/lib/hooks/useDiureticPresets'
+import { usePresets } from '@/lib/hooks/usePresets'
+import { useStreak } from '@/lib/hooks/useStreak'
+import { useTodayLogs } from '@/lib/hooks/useTodayLogs'
+import { useThemeColors } from '@/lib/hooks/useThemeColors'
 
 const DEFAULT_WATER_AMOUNTS = [250, 500, 750]
 
@@ -29,19 +29,16 @@ const DEFAULT_DIURETIC_PRESETS: Omit<DiureticPreset, 'id' | 'user_id' | 'sort_or
 
 export default function DashboardScreen() {
   const { user } = useAuth()
-  const { profile, loading: profileLoading } = useProfile(user?.id)
-  
+  const { profile, loading: profileLoading } = useProfileContext()
   const tabBarHeight = useBottomTabBarHeight()
   const c = useThemeColors()
-  
   const timezone = profile?.timezone ?? 'UTC'
   const goal = profile?.daily_goal_ml ?? 2500
 
   const [dayOffset, setDayOffset] = useState(0)
   const isToday = dayOffset === 0
-
-  const shiftedDate = new Date()
-  shiftedDate.setDate(shiftedDate.getDate() + dayOffset)
+  const { start: rangeStart } = getTodayRange(timezone, dayOffset)
+  const shiftedDate = new Date(rangeStart)
 
   const [refreshKey, setRefreshKey] = useState(0)
   function refresh() { setRefreshKey(k => k + 1) }
@@ -57,15 +54,20 @@ export default function DashboardScreen() {
   const [customAmount, setCustomAmount] = useState('')
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [clearing, setClearing] = useState(false)
+  const [logError, setLogError] = useState<string | null>(null)
 
   const consumed = waterLogs.reduce((sum, log) => sum + log.amount_ml, 0)
-  const { overGoal } = getHydrationProgress(consumed, goal)
   const netDiureticLoss = diureticLogs.reduce(
-    (sum, log) => sum + Math.round(log.amount_ml * log.diuretic_factor), 0
+    (sum, log) => sum + Math.round(log.amount_ml * log.diuretic_factor), 0,
   )
+
+  const { overGoal } = goal > 0
+    ? getHydrationProgress(consumed, goal)
+    : { overGoal: 0 }
   const isOverGoal = overGoal > 0
+
   const streak = useStreak(user?.id, goal, timezone)
-  
+
   const allWaterPresets = [
     ...DEFAULT_WATER_AMOUNTS.map(amount => ({
       id: `default-${amount}`,
@@ -97,12 +99,14 @@ export default function DashboardScreen() {
   async function handleQuickAdd(amount: number) {
     if (!user || addingWater) return
     setAddingWater(true)
+    setLogError(null)
     try {
-      await supabase.from('water_logs').insert({
+      const { error } = await supabase.from('water_logs').insert({
         user_id: user.id,
         amount_ml: amount,
         source: 'quick',
       })
+      if (error) { setLogError(error.message); return }
       refresh()
     } finally {
       setAddingWater(false)
@@ -112,14 +116,16 @@ export default function DashboardScreen() {
   async function handleAddDiuretic(preset: DiureticPreset) {
     if (!user || addingDiuretic) return
     setAddingDiuretic(true)
+    setLogError(null)
     try {
-      await supabase.from('diuretic_logs').insert({
+      const { error } = await supabase.from('diuretic_logs').insert({
         user_id: user.id,
         preset_id: preset.id.startsWith('default-') ? null : preset.id,
         label: preset.label,
         amount_ml: preset.amount_ml,
         diuretic_factor: preset.diuretic_factor,
       })
+      if (error) { setLogError(error.message); return }
       refresh()
     } finally {
       setAddingDiuretic(false)
@@ -130,18 +136,19 @@ export default function DashboardScreen() {
     useCallback(() => {
       refreshPresets()
       refreshDiureticPresets()
-    }, [refreshPresets, refreshDiureticPresets])
+    }, [refreshPresets, refreshDiureticPresets]),
   )
 
   async function handleDeleteLog(id: string, type: 'water' | 'diuretic') {
-    if (deletingId) return
+    if (!user || deletingId) return
     setDeletingId(id)
     try {
-      await supabase
+      const { error } = await supabase
         .from(type === 'water' ? 'water_logs' : 'diuretic_logs')
         .delete()
         .eq('id', id)
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
+      if (error) { setLogError(error.message); return }
       refresh()
     } finally {
       setDeletingId(null)
@@ -153,20 +160,14 @@ export default function DashboardScreen() {
     setClearing(true)
     try {
       const { start, end } = getTodayRange(timezone, dayOffset)
-      await Promise.all([
-        supabase
-          .from('water_logs')
-          .delete()
-          .eq('user_id', user.id)
-          .gte('logged_at', start)
-          .lt('logged_at', end),
-        supabase
-          .from('diuretic_logs')
-          .delete()
-          .eq('user_id', user.id)
-          .gte('logged_at', start)
-          .lt('logged_at', end),
+      const [waterRes, diureticRes] = await Promise.all([
+        supabase.from('water_logs').delete().eq('user_id', user.id).gte('logged_at', start).lt('logged_at', end),
+        supabase.from('diuretic_logs').delete().eq('user_id', user.id).gte('logged_at', start).lt('logged_at', end),
       ])
+      if (waterRes.error || diureticRes.error) {
+        setLogError(waterRes.error?.message ?? diureticRes.error?.message ?? 'Failed to clear logs.')
+        return
+      }
       refresh()
     } finally {
       setClearing(false)
@@ -225,6 +226,7 @@ export default function DashboardScreen() {
                 borderRadius: 10, borderWidth: 2, borderColor: '#0D4F78',
                 backgroundColor: c.card,
                 shadowColor: '#0D4F78', shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0,
+                opacity: isToday ? 0.3 : 1,
               }}
             >
               <Text style={{ color: '#0D4F78', fontWeight: '700', fontSize: 16, lineHeight: 18 }}>›</Text>
@@ -237,6 +239,13 @@ export default function DashboardScreen() {
           </View>
         </View>
 
+        {/* Error banner */}
+        {logError && (
+          <View className="bg-white dark:bg-dark-card border-2 border-status-error rounded-2xl px-4 py-3 mb-4">
+            <Text className="text-status-error text-sm font-semibold">{logError}</Text>
+          </View>
+        )}
+
         {/* Over goal warning */}
         {isOverGoal && (
           <View className="bg-white dark:bg-dark-card border-2 border-status-warning rounded-2xl px-4 py-3 mb-4">
@@ -246,7 +255,7 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Progress — dims during loading to signal data is refreshing */}
+        {/* Progress */}
         <Card className="mb-4">
           <View style={{ opacity: logsLoading ? 0.4 : 1 }}>
             <WaterBottle consumed={consumed} goal={goal} />
@@ -264,7 +273,7 @@ export default function DashboardScreen() {
           )}
         </Card>
 
-        {/* Quick Add — today only */}
+        {/* Quick Add */}
         {isToday && (
           <Card className="mb-4">
             <Text className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted mb-3">
@@ -301,7 +310,7 @@ export default function DashboardScreen() {
                   onChangeText={setCustomAmount}
                   returnKeyType="done"
                   onSubmitEditing={() => {
-                    const amount = parseInt(customAmount)
+                    const amount = parseInt(customAmount, 10)
                     if (amount > 0) {
                       handleQuickAdd(amount)
                       setCustomAmount('')
@@ -311,7 +320,7 @@ export default function DashboardScreen() {
                 />
                 <TouchableOpacity
                   onPress={() => {
-                    const amount = parseInt(customAmount)
+                    const amount = parseInt(customAmount, 10)
                     if (!amount || amount <= 0) return
                     handleQuickAdd(amount)
                     setCustomAmount('')
@@ -327,7 +336,7 @@ export default function DashboardScreen() {
           </Card>
         )}
 
-        {/* Diuretic Tracker — today only */}
+        {/* Diuretic Tracker */}
         {isToday && (
           <Card className="mb-4">
             <Text className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted mb-3">
@@ -347,16 +356,13 @@ export default function DashboardScreen() {
                   onPress={() => handleAddDiuretic(preset)}
                   disabled={addingDiuretic}
                   style={{
-                    borderWidth: 2,
-                    borderColor: preset.color,
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
+                    borderWidth: 2, borderColor: preset.color, borderRadius: 12,
+                    paddingHorizontal: 16, paddingVertical: 8,
                     opacity: addingDiuretic ? 0.5 : 1,
                   }}
                 >
                   <Text style={{ fontSize: 13, fontWeight: '600', color: preset.color }}>
-                    {preset.label} 
+                    {preset.label}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -387,24 +393,16 @@ export default function DashboardScreen() {
             <View style={{ gap: 8 }}>
               {mergedLogs.map(({ type, log }) => {
                 const diureticLog = type === 'diuretic' ? log as DiureticLog : null
-                const netLoss = diureticLog
-                  ? Math.round(diureticLog.amount_ml * diureticLog.diuretic_factor)
-                  : 0
-                const isDeleting = deletingId === log.id
-
+                const netLoss     = diureticLog ? Math.round(diureticLog.amount_ml * diureticLog.diuretic_factor) : 0
+                const isDeleting  = deletingId === log.id
                 return (
                   <View
                     key={`${type}-${log.id}`}
                     style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      borderWidth: 2,
-                      borderColor: '#0D4F78',
-                      borderRadius: 12,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      backgroundColor: c.inputBg, 
+                      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+                      borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
+                      paddingHorizontal: 16, paddingVertical: 12,
+                      backgroundColor: c.inputBg,
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>

@@ -1,19 +1,19 @@
 import { useEffect, useState, useCallback } from 'react'
-import { supabase } from './supabase'
-import type { DiureticPreset } from '@guater/types'
+import { QuickPreset } from '@guater/types'
+import { supabase } from '../supabase'
 
-export function useDiureticPresets(userId: string | undefined, refreshKey = 0) {
-  const [presets, setPresets] = useState<DiureticPreset[]>([])
+export function usePresets(userId: string | undefined, refreshKey = 0) {
+  const [presets, setPresets] = useState<QuickPreset[]>([])
 
   const fetch = useCallback(async () => {
     if (!userId) return
     try {
       const { data } = await supabase
-        .from('diuretic_presets')
-        .select('*')
+        .from('quick_presets')
+        .select('id, label, amount_ml')
         .eq('user_id', userId)
         .order('sort_order', { ascending: true })
-      setPresets(data as DiureticPreset[] ?? [])
+      setPresets(data as QuickPreset[] ?? [])
     } catch {
       setPresets([])
     }

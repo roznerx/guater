@@ -4,22 +4,9 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateProfile, type ActionResult } from '@/app/actions'
 import { calculateRecommendedIntake } from '@/lib/hydration'
-import type { ActivityLevel, Climate } from '@guater/utils'
+import { ACTIVITY_LEVELS, CLIMATES, type ActivityLevel, type Climate } from '@guater/utils'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-
-const ACTIVITY_LEVELS: { value: ActivityLevel; label: string; description: string }[] = [
-  { value: 'sedentary',   label: 'Sedentary',   description: 'Mostly sitting' },
-  { value: 'moderate',    label: 'Moderate',     description: 'Light exercise' },
-  { value: 'active',      label: 'Active',       description: 'Daily exercise' },
-  { value: 'very_active', label: 'Very active',  description: 'Intense training' },
-]
-
-const CLIMATES: { value: Climate; label: string }[] = [
-  { value: 'cold',      label: 'Cold' },
-  { value: 'temperate', label: 'Temperate' },
-  { value: 'hot',       label: 'Hot' },
-]
 
 type Step = 'welcome' | 'goal'
 

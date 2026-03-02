@@ -6,47 +6,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/lib/AuthContext'
-import { useThemeColors } from '@/lib/useThemeColors'
-import { calculateRecommendedIntake } from '@guater/utils'
-import type { ActivityLevel, Climate } from '@guater/utils'
-
-const ACTIVITY_LEVELS: { value: ActivityLevel; label: string; description: string }[] = [
-  { value: 'sedentary',   label: 'Sedentary',   description: 'Mostly sitting' },
-  { value: 'moderate',    label: 'Moderate',     description: 'Light exercise' },
-  { value: 'active',      label: 'Active',       description: 'Daily exercise' },
-  { value: 'very_active', label: 'Very active',  description: 'Intense training' },
-]
-
-const CLIMATES: { value: Climate; label: string }[] = [
-  { value: 'cold',      label: 'Cold' },
-  { value: 'temperate', label: 'Temperate' },
-  { value: 'hot',       label: 'Hot' },
-]
+import {
+  calculateRecommendedIntake,
+  validateGoalHealth,
+  ACTIVITY_LEVELS,
+  CLIMATES,
+} from '@guater/utils'
+import type { ActivityLevel, Climate, GoalHealthStatus } from '@guater/utils'
+import { useAuth } from '@/lib/context/AuthContext'
+import { useProfileContext } from '@/lib/context/ProfileContext'
+import { useThemeColors } from '@/lib/hooks/useThemeColors'
 
 type Step = 'welcome' | 'goal'
 const STEPS: Step[] = ['welcome', 'goal']
-
-type GoalHealthStatus =
-  | { level: 'ok' }
-  | { level: 'warning'; message: string }
-  | { level: 'danger';  message: string }
-
-function validateGoalHealth(ml: number): GoalHealthStatus {
-  if (ml < 500) {
-    return { level: 'danger', message: `${ml} ml is critically low and risks severe dehydration. Please set a goal above 500 ml.` }
-  }
-  if (ml < 1200) {
-    return { level: 'warning', message: `${ml} ml is below the general healthy minimum of 1,200 ml/day. Consider increasing your goal.` }
-  }
-  if (ml >= 8000) {
-    return { level: 'danger', message: `${ml.toLocaleString()} ml is dangerously high and risks water intoxication. Please set a goal below 8,000 ml.` }
-  }
-  if (ml >= 6000) {
-    return { level: 'warning', message: `${ml.toLocaleString()} ml is unusually high for most people. Only appropriate for elite athletes with medical guidance.` }
-  }
-  return { level: 'ok' }
-}
 
 function ProgressDots({ current, total, borderColor }: { current: number; total: number; borderColor: string }) {
   return (
@@ -71,10 +43,7 @@ function GoalHealthBanner({ status }: { status: GoalHealthStatus }) {
       backgroundColor: isDanger ? '#FEE2E2' : '#FEF9C3',
       borderColor: isDanger ? '#DC2626' : '#CA8A04',
     }}>
-      <Text style={{
-        fontSize: 13, fontWeight: '500', lineHeight: 18,
-        color: isDanger ? '#991B1B' : '#713F12',
-      }}>
+      <Text style={{ fontSize: 13, fontWeight: '500', lineHeight: 18, color: isDanger ? '#991B1B' : '#713F12' }}>
         {isDanger ? '⛔' : '⚠️'}{'  '}{status.message}
       </Text>
     </View>
@@ -83,6 +52,7 @@ function GoalHealthBanner({ status }: { status: GoalHealthStatus }) {
 
 export default function OnboardingScreen() {
   const { user } = useAuth()
+  const { refresh: refreshProfile } = useProfileContext()
   const c = useThemeColors()
 
   const [step, setStep] = useState<Step>('welcome')
@@ -105,10 +75,14 @@ export default function OnboardingScreen() {
     return null
   }, [weight, ageNum, activityLevel, climate])
 
-  const parsedGoal = parseInt(dailyGoal, 10)
+  const parsedGoal  = parseInt(dailyGoal, 10)
   const goalHealth: GoalHealthStatus = dailyGoal && !Number.isNaN(parsedGoal)
     ? validateGoalHealth(parsedGoal)
     : { level: 'ok' }
+
+  const resolvedGoal = !Number.isNaN(parsedGoal) && parsedGoal > 0
+    ? parsedGoal
+    : (recommended ?? 2500)
 
   const inputStyle = {
     borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
@@ -120,26 +94,17 @@ export default function OnboardingScreen() {
     if (!user) return
 
     if (!skip) {
-      const goalValue = !Number.isNaN(parsedGoal) && parsedGoal > 0
-        ? parsedGoal
-        : (recommended ?? 0)
-      if (goalValue <= 0) {
+      if (resolvedGoal <= 0) {
         setSaveError('Please enter a daily goal or fill in your stats to get a recommendation.')
         return
       }
-      if (goalHealth.level === 'danger') {
-        return
-      }
+      if (goalHealth.level === 'danger') return
     }
 
     setSaveError(null)
     setSaving(true)
 
     try {
-      const resolvedGoal = !Number.isNaN(parsedGoal) && parsedGoal > 0
-        ? parsedGoal
-        : (recommended ?? 2500)
-
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -157,6 +122,8 @@ export default function OnboardingScreen() {
         setSaveError(error.message)
         return
       }
+
+      await refreshProfile()
 
       router.replace('/(tabs)')
     } catch {
@@ -193,7 +160,8 @@ export default function OnboardingScreen() {
 
             <View style={{ gap: 8, marginBottom: 8 }}>
               <Text style={{ fontSize: 13, fontWeight: '600', color: c.textSecondary, marginBottom: 4 }}>
-                What should we call you? <Text style={{ color: c.textMuted, fontWeight: '400' }}>(optional)</Text>
+                What should we call you?{' '}
+                <Text style={{ color: c.textMuted, fontWeight: '400' }}>(optional)</Text>
               </Text>
               <TextInput
                 value={displayName}
@@ -341,10 +309,8 @@ export default function OnboardingScreen() {
           style={{ ...inputStyle, marginBottom: 8 }}
         />
 
-        {/* Inline goal health validation */}
         <GoalHealthBanner status={goalHealth} />
 
-        {/* Save / server errors */}
         {saveError && (
           <Text style={{ fontSize: 12, fontWeight: '600', color: '#DC2626', marginBottom: 8 }}>
             {saveError}

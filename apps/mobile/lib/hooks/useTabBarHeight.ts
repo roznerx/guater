@@ -1,3 +1,5 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 
-export const tabBarHeight = useBottomTabBarHeight()
+export function useTabBarHeight() {
+  return useBottomTabBarHeight()
+}

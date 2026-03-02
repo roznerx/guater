@@ -1,25 +1,33 @@
+import { useRef } from 'react'
 import Svg, { Defs, ClipPath, Rect, Path, LinearGradient, Stop, G } from 'react-native-svg'
 import { View, Text } from 'react-native'
 import { getHydrationProgress } from '@guater/utils'
-import { useThemeColors } from '@/lib/useThemeColors'
+import { useThemeColors } from '@/lib/hooks/useThemeColors'
 
 interface WaterBottleProps {
   consumed: number
   goal: number
 }
 
+let instanceCounter = 0
+
 export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
-  const { percentage, remaining, overGoal } = getHydrationProgress(consumed, goal)
+  const clipId = useRef(`bottle-clip-${++instanceCounter}`).current
+
   const c = useThemeColors()
+
+  if (goal <= 0) return null
+
+  const { percentage, remaining, overGoal } = getHydrationProgress(consumed, goal)
 
   const W = 72
   const H = 140
-  const bottleTop = 24
+  const bottleTop    = 24
   const bottleBottom = H - 10
   const bottleHeight = bottleBottom - bottleTop
-  const fillHeight = (percentage / 100) * bottleHeight
-  const fillY = bottleBottom - fillHeight
-  const isFull = percentage >= 100
+  const fillHeight   = (percentage / 100) * bottleHeight
+  const fillY        = bottleBottom - fillHeight
+  const isFull       = percentage >= 100
 
   const bottlePath = `
     M ${W * 0.35} 6
@@ -40,7 +48,7 @@ export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
       <View style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }}>
         <Svg width={W} height={H}>
           <Defs>
-            <ClipPath id="bottle-clip">
+            <ClipPath id={clipId}>
               <Path d={bottlePath} />
             </ClipPath>
             <LinearGradient id="water-grad" x1="0" y1="0" x2="1" y2="0">
@@ -48,9 +56,8 @@ export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
               <Stop offset="1" stopColor="#3E8FC0" />
             </LinearGradient>
           </Defs>
-          {/* Bottle body — theme-aware fill */}
           <Path d={bottlePath} fill={c.cardAlt} stroke="#0D4F78" strokeWidth={2.5} />
-          <G clipPath="url(#bottle-clip)">
+          <G clipPath={`url(#${clipId})`}>
             <Rect x={0} y={fillY} width={W} height={fillHeight} fill="url(#water-grad)" />
           </G>
           <Path d={bottlePath} fill="none" stroke="#0D4F78" strokeWidth={2.5} />
@@ -58,10 +65,10 @@ export default function WaterBottle({ consumed, goal }: WaterBottleProps) {
       </View>
 
       <View style={{ paddingLeft: W + 16, height: H, justifyContent: 'center' }}>
-        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#0D4F78' }}>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: c.selectedText }}>
           {percentage}%
         </Text>
-        <Text style={{ fontSize: 14, fontWeight: '600', color: '#1A6FA0', marginTop: 2 }}>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: c.textSecondary, marginTop: 2 }}>
           {consumed.toLocaleString()} ml
         </Text>
         <Text style={{ fontSize: 13, color: c.textMuted, marginTop: 2 }}>

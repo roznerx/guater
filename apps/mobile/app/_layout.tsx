@@ -3,35 +3,35 @@ import { Stack, router, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useColorScheme } from 'nativewind'
-import { AuthProvider, useAuth } from '@/lib/AuthContext'
-import { ThemeProvider, useTheme } from '@/lib/ThemeContext'
+import { AuthProvider, useAuth } from '@/lib/context/AuthContext'
+import { ThemeProvider, useTheme } from '@/lib/context/ThemeContext'
+import { ProfileProvider, useProfileContext } from '@/lib/context/ProfileContext'
 import '../global.css'
-import { useProfile } from '@/lib/useProfile'
 
 function AuthGate() {
   const { user, loading } = useAuth()
-  const { profile, loading: profileLoading } = useProfile(user?.id)
+  const { profile, loading: profileLoading } = useProfileContext()
   const segments = useSegments()
+  const segmentKey = segments.join('/')
 
   useEffect(() => {
     if (loading || profileLoading) return
-    const inAuthGroup = segments[0] === '(auth)'
-    const inOnboarding = segments[0] === '(onboarding)'
+
+    const [firstSegment] = segmentKey.split('/')
+    const inAuthGroup = firstSegment === '(auth)'
+    const inOnboarding = firstSegment === '(onboarding)'
+    const needsOnboarding = user && !profile?.onboarding_completed
 
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/login')
     } else if (user && inAuthGroup) {
-      if (profile && !profile.onboarding_completed) {
-        router.replace('/(onboarding)/index')
-      } else {
-        router.replace('/(tabs)')
-      }
-    } else if (user && !inAuthGroup && !inOnboarding) {
-      if (profile && !profile.onboarding_completed) {
-        router.replace('/(onboarding)/index')
-      }
+      router.replace(needsOnboarding ? '/(onboarding)' : '/(tabs)')
+    } else if (user && inOnboarding && !needsOnboarding) {
+      router.replace('/(tabs)')
+    } else if (user && !inAuthGroup && !inOnboarding && needsOnboarding) {
+      router.replace('/(onboarding)')
     }
-  }, [user, loading, profile, profileLoading, segments])
+  }, [user, loading, profile, profileLoading, segmentKey])
 
   return null
 }
@@ -39,17 +39,14 @@ function AuthGate() {
 function ThemeSync() {
   const { resolvedTheme } = useTheme()
   const { setColorScheme } = useColorScheme()
-
   useEffect(() => {
     setColorScheme(resolvedTheme)
   }, [resolvedTheme])
-
   return null
 }
 
 function AppShell() {
   const { resolvedTheme } = useTheme()
-
   return (
     <>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
@@ -65,7 +62,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <AppShell />
+          <ProfileProvider>
+            <AppShell />
+          </ProfileProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

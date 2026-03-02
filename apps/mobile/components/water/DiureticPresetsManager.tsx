@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/lib/AuthContext'
 import type { DiureticPreset } from '@guater/types'
-import { useThemeColors } from '@/lib/useThemeColors'
+import { useAuth } from '@/lib/context/AuthContext'
+import { useThemeColors } from '@/lib/hooks/useThemeColors'
 
 const PALETTE = [
   { label: 'Blue Pale',  value: '#C8DCEE' },
@@ -34,6 +34,20 @@ const DRINK_TYPES = [
   { label: 'Custom',       amount_ml: 250, factor: 0.30, color: '#94A8BA' },
 ]
 
+const sectionLabel = {
+  fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.5,
+  color: '#94A8BA', textTransform: 'uppercase' as const, marginBottom: 6,
+}
+
+const fieldLabel = {
+  fontSize: 13, fontWeight: '600' as const, color: '#4A6070', marginBottom: 6,
+}
+
+const inputBase = {
+  borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
+  paddingHorizontal: 12, paddingVertical: 10, fontSize: 14,
+}
+
 interface DiureticPresetsManagerProps {
   presets: DiureticPreset[]
   onRefresh: () => void
@@ -42,15 +56,16 @@ interface DiureticPresetsManagerProps {
 export default function DiureticPresetsManager({ presets, onRefresh }: DiureticPresetsManagerProps) {
   const { user } = useAuth()
   const c = useThemeColors()
-  
-  const [adding, setAdding] = useState(false)
-  const [saving, setSaving] = useState(false)
+
+  const [adding, setAdding]         = useState(false)
+  const [saving, setSaving]         = useState(false)
+  const [saveError, setSaveError]   = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const [selectedType, setSelectedType] = useState(DRINK_TYPES[0])
-  const [nameValue, setNameValue] = useState(DRINK_TYPES[0].label)
-  const [amountValue, setAmountValue] = useState(String(DRINK_TYPES[0].amount_ml))
-  const [color, setColor] = useState(DRINK_TYPES[0].color)
+  const [nameValue, setNameValue]       = useState(DRINK_TYPES[0].label)
+  const [amountValue, setAmountValue]   = useState(String(DRINK_TYPES[0].amount_ml))
+  const [color, setColor]               = useState(DRINK_TYPES[0].color)
   const [showTypePicker, setShowTypePicker] = useState(false)
 
   function handleTypeChange(type: typeof DRINK_TYPES[0]) {
@@ -67,24 +82,30 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
     setAmountValue(String(DRINK_TYPES[0].amount_ml))
     setColor(DRINK_TYPES[0].color)
     setShowTypePicker(false)
+    setSaveError(null)
     setAdding(false)
   }
 
   async function handleAdd() {
     if (!user || !nameValue.trim() || !amountValue) return
-    const amountNum = parseInt(amountValue)
-    if (isNaN(amountNum) || amountNum <= 0 || amountNum > 2000) return
+    const amountNum = parseInt(amountValue, 10)
+    if (Number.isNaN(amountNum) || amountNum <= 0 || amountNum > 2000) return
 
     setSaving(true)
+    setSaveError(null)
     try {
-      await supabase.from('diuretic_presets').insert({
-        user_id: user.id,
-        label: nameValue.trim(),
-        amount_ml: amountNum,
+      const { error } = await supabase.from('diuretic_presets').insert({
+        user_id:         user.id,
+        label:           nameValue.trim(),
+        amount_ml:       amountNum,
         diuretic_factor: selectedType.factor,
         color,
-        sort_order: presets.length,
+        sort_order:      presets.length,
       })
+      if (error) {
+        setSaveError(error.message)
+        return
+      }
       resetForm()
       onRefresh()
     } finally {
@@ -93,27 +114,22 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
   }
 
   async function handleDelete(id: string) {
-    if (deletingId) return
+    if (!user || deletingId) return
     setDeletingId(id)
     try {
-      await supabase
+      const { error } = await supabase
         .from('diuretic_presets')
         .delete()
         .eq('id', id)
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
+      if (error) {
+        setSaveError(error.message)
+        return
+      }
       onRefresh()
     } finally {
       setDeletingId(null)
     }
-  }
-
-  const sectionLabel = { fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.5, color: '#94A8BA', textTransform: 'uppercase' as const, marginBottom: 6 }
-
-  const fieldLabel = { fontSize: 13, fontWeight: '600' as const, color: '#4A6070', marginBottom: 6 }
-
-  const inputBase = {
-    borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14,
   }
 
   return (
@@ -129,13 +145,13 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
         {presets.map((preset) => (
           <View
             key={preset.id}
-             style={{
-                flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-                paddingHorizontal: 16, paddingVertical: 12,
-                borderRadius: 12, borderWidth: 2, borderColor: c.border,
-                backgroundColor: c.cardAlt,
-              }}
-            >
+            style={{
+              flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+              paddingHorizontal: 16, paddingVertical: 12,
+              borderRadius: 12, borderWidth: 2, borderColor: c.border,
+              backgroundColor: c.cardAlt,
+            }}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
               <View style={{ width: 12, height: 12, borderRadius: 999, backgroundColor: preset.color, borderWidth: 1, borderColor: c.border }} />
               <Text style={{ fontWeight: '600', fontSize: 14, color: c.selectedText }}>
@@ -219,11 +235,7 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
                 onChangeText={setNameValue}
                 placeholder="e.g. My morning coffee"
                 placeholderTextColor="#94A8BA"
-                style={{
-                  ...inputBase,
-                  color: c.textPrimary,
-                  backgroundColor: c.inputBg,
-                }}
+                style={{ ...inputBase, color: c.textPrimary, backgroundColor: c.inputBg }}
               />
             </View>
             <View style={{ width: 100 }}>
@@ -234,11 +246,7 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
                 placeholder="250"
                 placeholderTextColor="#94A8BA"
                 keyboardType="numeric"
-                style={{
-                ...inputBase,
-                color: c.textPrimary,
-                backgroundColor: c.inputBg,
-              }}
+                style={{ ...inputBase, color: c.textPrimary, backgroundColor: c.inputBg }}
               />
             </View>
           </View>
@@ -266,6 +274,10 @@ export default function DiureticPresetsManager({ presets, onRefresh }: DiureticP
               {color}
             </Text>
           </View>
+
+          {saveError && (
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#D95F5F' }}>{saveError}</Text>
+          )}
 
           {/* Actions */}
           <View style={{ flexDirection: 'row', gap: 10 }}>

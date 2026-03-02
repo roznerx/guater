@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { Link } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { supabase } from '@/lib/supabase'
 import AuthHeader from '@/components/ui/AuthHeader'
 import AuthBanner from '@/components/ui/AuthBanner'
+import Input from '@/components/ui/Input'
+import { EMAIL_REGEX, MIN_PASSWORD_LENGTH } from '@guater/utils'
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('')
@@ -14,19 +16,45 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false)
 
   async function handleLogin() {
-    if (!email || !password) {
+    const trimmedEmail = email.trim()
+
+    if (!trimmedEmail || !password) {
       setError('Please enter your email and password.')
       return
     }
+
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setError('Please enter a valid email address.')
+      return
+    }
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
+      return
+    }
+
     setLoading(true)
     setError(null)
+    
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      })
+      if (authError) setError(authError.message)
     } finally {
       setLoading(false)
     }
   }
+
+  const EyeToggle = (
+    <TouchableOpacity
+      onPress={() => setShowPassword(v => !v)}
+      accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+    >
+      <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={18} color="#94A8BA" />
+    </TouchableOpacity>
+  )
 
   return (
     <KeyboardAvoidingView
@@ -39,57 +67,35 @@ export default function LoginScreen() {
         {error && <AuthBanner message={error} type="error" />}
 
         <View className="flex flex-col gap-4">
-          <View>
-            <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1.5">
-              Email
-            </Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              placeholderTextColor="#94A8BA"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              returnKeyType="next"
-              className="border-2 border-blue-deep rounded-xl px-3 py-3 text-sm text-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-card"
-            />
-          </View>
+          <Input
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            autoFocus
+            returnKeyType="next"
+          />
 
-          <View>
-            <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1.5">
-              Password
-            </Text>
-            <View className="flex-row items-center border-2 border-blue-deep rounded-xl bg-white dark:bg-dark-card">
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="••••••••"
-                placeholderTextColor="#94A8BA"
-                secureTextEntry={!showPassword}
-                autoComplete="password"
-                returnKeyType="done"
-                onSubmitEditing={handleLogin}
-                className="flex-1 px-3 py-3 text-sm text-text-primary dark:text-dark-text-primary"
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(v => !v)}
-                className="px-3"
-                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-              >
-                <Ionicons
-                  name={showPassword ? 'eye-off' : 'eye'}
-                  size={18}
-                  color="#94A8BA"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <Input
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="••••••••"
+            secureTextEntry={!showPassword}
+            autoComplete="password"
+            returnKeyType="done"
+            onSubmitEditing={handleLogin}
+            suffix={EyeToggle}
+          />
 
           <TouchableOpacity
             onPress={handleLogin}
             disabled={loading}
-            className="bg-blue-deep rounded-xl py-3.5 items-center mt-2 disabled:opacity-50"
+            style={{ opacity: loading ? 0.5 : 1 }}
+            className="bg-blue-deep rounded-xl py-3.5 items-center mt-2"
           >
             {loading
               ? <ActivityIndicator color="white" />
