@@ -24,7 +24,8 @@ type UnifiedEntry =
 
 const inlineInputClass = `
   w-20 border-2 border-blue-deep rounded-lg px-2 py-1
-  text-sm font-semibold text-text-primary outline-none bg-white
+  text-sm font-semibold text-text-primary dark:text-dark-text-primary outline-none
+  bg-white dark:bg-dark-card
   shadow-[2px_2px_0_#0D4F78] focus:shadow-[1px_1px_0_#0D4F78]
   focus:translate-x-0.5 focus:translate-y-0.5 transition-all
   disabled:opacity-50

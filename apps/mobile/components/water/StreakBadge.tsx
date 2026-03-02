@@ -6,7 +6,6 @@ interface StreakBadgeProps {
 
 export default function StreakBadge({ streak }: StreakBadgeProps) {
   if (streak === 0) return null
-
   return (
     <View
       accessibilityLabel={`${streak} day streak`}
@@ -28,7 +27,8 @@ export default function StreakBadge({ streak }: StreakBadgeProps) {
       }}
     >
       <View
-        aria-hidden
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
         style={{ width: 8, height: 8, borderRadius: 999, backgroundColor: '#1A7A74' }}
       />
       <Text style={{ fontSize: 13, fontWeight: '600', color: '#1A7A74' }}>

@@ -1,31 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useAuth } from '@/lib/AuthContext'
-import { useProfile } from '@/lib/useProfile'
-import { usePresets } from '@/lib/usePresets'
-import { useDiureticPresets } from '@/lib/useDiureticPresets'
 import { supabase } from '@/lib/supabase'
-import { calculateRecommendedIntake } from '@guater/utils'
+import { calculateRecommendedIntake, ACTIVITY_LEVELS, CLIMATES } from '@guater/utils'
+import type { ActivityLevel, Climate } from '@guater/utils'
 import Card from '@/components/ui/Card'
 import PresetsManager from '@/components/water/PresetsManager'
 import DiureticPresetsManager from '@/components/water/DiureticPresetsManager'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
-import { useTheme, type ThemePreference } from '@/lib/ThemeContext'
-import { useThemeColors } from '@/lib/useThemeColors'
-
-const ACTIVITY_LEVELS = [
-  { value: 'sedentary',   label: 'Sedentary',   description: 'Mostly sitting' },
-  { value: 'moderate',    label: 'Moderate',    description: 'Light exercise' },
-  { value: 'active',      label: 'Active',      description: 'Daily exercise' },
-  { value: 'very_active', label: 'Very active', description: 'Intense training' },
-]
-
-const CLIMATES = [
-  { value: 'cold',      label: 'Cold' },
-  { value: 'temperate', label: 'Temperate' },
-  { value: 'hot',       label: 'Hot' },
-]
+import { useTheme, type ThemePreference } from '@/lib/context/ThemeContext'
+import { useProfileContext } from '@/lib/context/ProfileContext'
+import { deleteAccount } from '@/lib/api/deleteAccount'
+import { useAuth } from '@/lib/context/AuthContext'
+import { useDiureticPresets } from '@/lib/hooks/useDiureticPresets'
+import { usePresets } from '@/lib/hooks/usePresets'
+import { useThemeColors } from '@/lib/hooks/useThemeColors'
 
 const UNITS = [
   { value: 'ml', label: 'ml' },
@@ -33,14 +22,14 @@ const UNITS = [
 ]
 
 const TIMEZONES = [
-  { value: 'UTC',                            label: 'UTC' },
+  { value: 'UTC', label: 'UTC' },
   { value: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires (ART)' },
-  { value: 'America/New_York',               label: 'New York (EST)' },
-  { value: 'America/Chicago',                label: 'Chicago (CST)' },
-  { value: 'America/Denver',                 label: 'Denver (MST)' },
-  { value: 'America/Los_Angeles',            label: 'Los Angeles (PST)' },
-  { value: 'Europe/London',                  label: 'London (GMT)' },
-  { value: 'Europe/Paris',                   label: 'Paris (CET)' },
+  { value: 'America/New_York', label: 'New York (EST)' },
+  { value: 'America/Chicago', label: 'Chicago (CST)' },
+  { value: 'America/Denver', label: 'Denver (MST)' },
+  { value: 'America/Los_Angeles', label: 'Los Angeles (PST)' },
+  { value: 'Europe/London', label: 'London (GMT)' },
+  { value: 'Europe/Paris', label: 'Paris (CET)' },
 ]
 
 function SegmentedControl({ options, value, onChange }: {
@@ -56,15 +45,12 @@ function SegmentedControl({ options, value, onChange }: {
           key={opt.value}
           onPress={() => onChange(opt.value)}
           style={{
-            flex: 1,
-            paddingVertical: 10,
-            alignItems: 'center',
+            flex: 1, paddingVertical: 10, alignItems: 'center',
             backgroundColor: value === opt.value ? '#0D4F78' : c.card,
-            borderLeftWidth: i > 0 ? 2 : 0,
-            borderLeftColor: '#0D4F78',
+            borderLeftWidth: i > 0 ? 2 : 0, borderLeftColor: '#0D4F78',
           }}
         >
-          <Text style={{ fontSize: 13, fontWeight: '600', color: value === opt.value ? '#ffffff' : '#0D4F78' }}>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: value === opt.value ? '#ffffff' : c.selectedText }}>
             {opt.label}
           </Text>
         </TouchableOpacity>
@@ -86,24 +72,16 @@ function OptionList({ options, value, onChange }: {
           key={opt.value}
           onPress={() => onChange(opt.value)}
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+            paddingHorizontal: 16, paddingVertical: 12,
             backgroundColor: value === opt.value ? c.selectedBg : c.card,
-            borderTopWidth: i > 0 ? 2 : 0,
-            borderTopColor: c.border,
+            borderTopWidth: i > 0 ? 2 : 0, borderTopColor: c.border,
           }}
         >
           <View>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: c.selectedText }}>
-              {opt.label}
-            </Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: c.selectedText }}>{opt.label}</Text>
             {opt.description && (
-              <Text style={{ fontSize: 12, color: c.textMuted, marginTop: 1 }}>
-                {opt.description}
-              </Text>
+              <Text style={{ fontSize: 12, color: c.textMuted, marginTop: 1 }}>{opt.description}</Text>
             )}
           </View>
           {value === opt.value && (
@@ -116,16 +94,18 @@ function OptionList({ options, value, onChange }: {
 }
 
 function SectionLabel({ label }: { label: string }) {
+  const c = useThemeColors()
   return (
-    <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.5, color: '#94A8BA', textTransform: 'uppercase', marginBottom: 8 }}>
+    <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.5, color: c.textMuted, textTransform: 'uppercase', marginBottom: 8 }}>
       {label}
     </Text>
   )
 }
 
 function FieldLabel({ label }: { label: string }) {
+  const c = useThemeColors()
   return (
-    <Text style={{ fontSize: 13, fontWeight: '600', color: '#4A6070', marginBottom: 6 }}>
+    <Text style={{ fontSize: 13, fontWeight: '600', color: c.textSecondary, marginBottom: 6 }}>
       {label}
     </Text>
   )
@@ -133,11 +113,12 @@ function FieldLabel({ label }: { label: string }) {
 
 export default function SettingsScreen() {
   const { user } = useAuth()
-  const { profile, loading, refresh: refreshProfile } = useProfile(user?.id)
+  const { profile, loading, refresh: refreshProfile } = useProfileContext()
+  const [deleting, setDeleting] = useState(false)
 
   const c = useThemeColors()
   const tabBarHeight = useBottomTabBarHeight()
-  
+
   const [presetsRefreshKey, setPresetsRefreshKey] = useState(0)
   const [diureticPresetsRefreshKey, setDiureticPresetsRefreshKey] = useState(0)
 
@@ -146,24 +127,19 @@ export default function SettingsScreen() {
   const { theme, setTheme } = useTheme()
 
   const [saving, setSaving] = useState(false)
-  const [displayName, setDisplayName] = useState('')
+  const [displayName, setDisplayName]  = useState('')
   const [weightKg, setWeightKg] = useState('')
   const [age, setAge] = useState('')
-  const [activityLevel, setActivityLevel] = useState<'sedentary' | 'moderate' | 'active' | 'very_active'>('moderate')
-  const [climate, setClimate] = useState<'cold' | 'temperate' | 'hot'>('temperate')
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate')
+  const [climate, setClimate] = useState<Climate>('temperate')
   const [dailyGoal, setDailyGoal] = useState('2500')
   const [unit, setUnit] = useState<'ml' | 'oz'>('ml')
   const [timezone, setTimezone] = useState('UTC')
 
   const inputStyle = {
-    borderWidth: 2,
-    borderColor: '#0D4F78',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: c.textPrimary,
-    backgroundColor: c.inputBg,
+    borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
+    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14,
+    color: c.textPrimary, backgroundColor: c.inputBg,
   }
 
   useEffect(() => {
@@ -171,32 +147,39 @@ export default function SettingsScreen() {
     setDisplayName(profile.display_name ?? '')
     setWeightKg(profile.weight_kg?.toString() ?? '')
     setAge(profile.age?.toString() ?? '')
-    setActivityLevel((profile.activity_level as 'sedentary' | 'moderate' | 'active' | 'very_active') ?? 'moderate')
-    setClimate((profile.climate as 'cold' | 'temperate' | 'hot') ?? 'temperate')
+    setActivityLevel((profile.activity_level as ActivityLevel) ?? 'moderate')
+    setClimate((profile.climate as Climate) ?? 'temperate')
     setDailyGoal(profile.daily_goal_ml?.toString() ?? '2500')
     setUnit((profile.preferred_unit as 'ml' | 'oz') ?? 'ml')
     setTimezone(profile.timezone ?? 'UTC')
   }, [profile])
 
   const weight = parseFloat(weightKg)
-  const ageNum = parseInt(age)
-  const recommended = weight > 0 && ageNum > 0
-    ? calculateRecommendedIntake(weight, ageNum, activityLevel, climate)
-    : null
+  const ageNum = parseInt(age, 10)
+
+  const recommended = useMemo(() => {
+    if (weight > 0 && ageNum > 0) {
+      return calculateRecommendedIntake(weight, ageNum, activityLevel, climate)
+    }
+    return null
+  }, [weight, ageNum, activityLevel, climate])
 
   async function handleSave() {
     if (!user || saving) return
     setSaving(true)
     try {
+      const parsedGoal = parseInt(dailyGoal, 10)
+      const resolvedGoal = !Number.isNaN(parsedGoal) && parsedGoal > 0 ? parsedGoal : 2500
+
       const { error } = await supabase
         .from('profiles')
         .update({
-          display_name:   displayName || null,
-          daily_goal_ml:  parseInt(dailyGoal) || 2500,
+          display_name: displayName || null,
+          daily_goal_ml: resolvedGoal,
           preferred_unit: unit,
           timezone,
-          weight_kg:      weight > 0 ? weight : null,
-          age:            ageNum > 0 ? ageNum : null,
+          weight_kg: weight > 0 ? weight : null,
+          age: ageNum > 0 ? ageNum : null,
           activity_level: activityLevel,
           climate,
         })
@@ -207,7 +190,7 @@ export default function SettingsScreen() {
         return
       }
 
-      refreshProfile()
+      await refreshProfile()
       Alert.alert('Saved', 'Settings updated successfully.')
     } finally {
       setSaving(false)
@@ -218,11 +201,41 @@ export default function SettingsScreen() {
     Alert.alert('Log out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Log out',
-        style: 'destructive',
+        text: 'Log out', style: 'destructive',
         onPress: async () => { await supabase.auth.signOut() },
       },
     ])
+  }
+
+  async function handleDeleteAccount() {
+    Alert.alert(
+      'Delete account',
+      'This will permanently delete your account and all your data — logs, presets, and settings. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete account', style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Are you absolutely sure?',
+              'Your data cannot be recovered after deletion.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Yes, delete everything', style: 'destructive',
+                  onPress: async () => {
+                    setDeleting(true)
+                    const { error } = await deleteAccount()
+                    setDeleting(false)
+                    if (error) Alert.alert('Error', error)
+                  },
+                },
+              ],
+            )
+          },
+        },
+      ],
+    )
   }
 
   if (loading) {
@@ -286,7 +299,7 @@ export default function SettingsScreen() {
               <OptionList
                 options={ACTIVITY_LEVELS}
                 value={activityLevel}
-                onChange={(v) => setActivityLevel(v as 'sedentary' | 'moderate' | 'active' | 'very_active')}
+                onChange={(v) => setActivityLevel(v as ActivityLevel)}
               />
             </View>
             <View>
@@ -294,27 +307,23 @@ export default function SettingsScreen() {
               <SegmentedControl
                 options={CLIMATES}
                 value={climate}
-                onChange={(v) => setClimate(v as 'cold' | 'temperate' | 'hot')}
+                onChange={(v) => setClimate(v as Climate)}
               />
             </View>
           </View>
         </Card>
 
         {/* Recommended intake */}
-        {recommended && (
+        {recommended !== null && (
           <View style={{
-            marginBottom: 16,
-            borderWidth: 2,
-            borderColor: '#0D4F78',
-            borderRadius: 16,
-            padding: 16,
-            backgroundColor: '#C8DCEE',
+            marginBottom: 16, borderWidth: 2, borderColor: '#0D4F78',
+            borderRadius: 16, padding: 16, backgroundColor: c.selectedBg,
           }}>
             <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.5, color: '#1A6FA0', textTransform: 'uppercase', marginBottom: 6 }}>
               Recommended intake
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#0D4F78' }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: c.selectedText }}>
                 {recommended.toLocaleString()} ml / day
               </Text>
               <TouchableOpacity onPress={() => setDailyGoal(String(recommended))}>
@@ -353,11 +362,7 @@ export default function SettingsScreen() {
         {/* Timezone */}
         <Card className="mb-4">
           <SectionLabel label="Timezone" />
-          <OptionList
-            options={TIMEZONES}
-            value={timezone}
-            onChange={setTimezone}
-          />
+          <OptionList options={TIMEZONES} value={timezone} onChange={setTimezone} />
         </Card>
 
         {/* Quick add presets */}
@@ -395,12 +400,8 @@ export default function SettingsScreen() {
           onPress={handleSave}
           disabled={saving}
           style={{
-            backgroundColor: '#0D4F78',
-            borderRadius: 12,
-            paddingVertical: 14,
-            alignItems: 'center',
-            marginBottom: 12,
-            opacity: saving ? 0.5 : 1,
+            backgroundColor: '#0D4F78', borderRadius: 12, paddingVertical: 14,
+            alignItems: 'center', marginBottom: 12, opacity: saving ? 0.5 : 1,
           }}
         >
           {saving
@@ -410,22 +411,27 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         {/* Account */}
-        <Card>
+        <Card className="mb-4">
           <SectionLabel label="Account" />
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={{
-              borderWidth: 2,
-              borderColor: '#DDE8F0',
-              borderRadius: 12,
-              paddingVertical: 12,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#94A8BA' }}>
-              Log out
-            </Text>
-          </TouchableOpacity>
+          <View style={{ gap: 12 }}>
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={{ borderWidth: 2, borderColor: c.border, borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '600', color: c.textMuted }}>Log out</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleDeleteAccount}
+              disabled={deleting}
+              style={{ borderWidth: 2, borderColor: '#D95F5F', borderRadius: 12, paddingVertical: 12, alignItems: 'center', opacity: deleting ? 0.5 : 1 }}
+            >
+              {deleting
+                ? <ActivityIndicator size="small" color="#D95F5F" />
+                : <Text style={{ fontSize: 14, fontWeight: '600', color: '#D95F5F' }}>Delete account</Text>
+              }
+            </TouchableOpacity>
+          </View>
         </Card>
 
       </ScrollView>

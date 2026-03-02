@@ -67,11 +67,10 @@ export default function ConfirmDialog({
                 No
               </Button>
               <Button
-                variant={confirmVariant === 'primary' ? 'primary' : 'ghost'}
+                variant={confirmVariant === 'danger' ? 'danger' : 'primary'}
                 fullWidth
                 onClick={handleConfirm}
                 disabled={loading}
-                className={confirmVariant === 'danger' ? 'bg-status-error border-blue-deep text-white' : ''}
               >
                 {loading ? 'Loading…' : confirmLabel}
               </Button>

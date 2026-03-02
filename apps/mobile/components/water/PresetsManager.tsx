@@ -1,47 +1,62 @@
 import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/lib/AuthContext'
 import type { QuickPreset } from '@guater/types'
-import { useThemeColors } from '@/lib/useThemeColors'
+import { useAuth } from '@/lib/context/AuthContext'
+import { useThemeColors } from '@/lib/hooks/useThemeColors'
 
-interface PresetsManagerProps {
-  presets: QuickPreset[]
-  onRefresh: () => void
+const fieldLabel = {
+  fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.5,
+  color: '#94A8BA', textTransform: 'uppercase' as const, marginBottom: 6,
 }
-
-const fieldLabel = { fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.5, color: '#94A8BA', textTransform: 'uppercase' as const, marginBottom: 6 }
 
 const inputBase = {
   borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
   paddingHorizontal: 12, paddingVertical: 10, fontSize: 14,
 }
 
+interface PresetsManagerProps {
+  presets: QuickPreset[]
+  onRefresh: () => void
+}
+
 export default function PresetsManager({ presets, onRefresh }: PresetsManagerProps) {
   const { user } = useAuth()
   const c = useThemeColors()
-  const [adding, setAdding] = useState(false)
-  const [label, setLabel] = useState('')
-  const [amount, setAmount] = useState('')
-  const [saving, setSaving] = useState(false)
+
+  const [adding, setAdding]         = useState(false)
+  const [label, setLabel]           = useState('')
+  const [amount, setAmount]         = useState('')
+  const [saving, setSaving]         = useState(false)
+  const [saveError, setSaveError]   = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  function resetForm() {
+    setLabel('')
+    setAmount('')
+    setSaveError(null)
+    setAdding(false)
+  }
 
   async function handleAdd() {
     if (!user || !label.trim() || !amount) return
-    const amountNum = parseInt(amount)
-    if (isNaN(amountNum) || amountNum <= 0 || amountNum > 5000) return
+    const amountNum = parseInt(amount, 10)
+    if (Number.isNaN(amountNum) || amountNum <= 0 || amountNum > 5000) return
 
     setSaving(true)
+    setSaveError(null)
     try {
-      await supabase.from('quick_presets').insert({
-        user_id: user.id,
-        label: label.trim(),
-        amount_ml: amountNum,
+      const { error } = await supabase.from('quick_presets').insert({
+        user_id:    user.id,
+        label:      label.trim(),
+        amount_ml:  amountNum,
         sort_order: presets.length,
       })
-      setLabel('')
-      setAmount('')
-      setAdding(false)
+      if (error) {
+        setSaveError(error.message)
+        return
+      }
+      resetForm()
       onRefresh()
     } finally {
       setSaving(false)
@@ -49,14 +64,18 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
   }
 
   async function handleDelete(id: string) {
-    if (deletingId) return
+    if (!user || deletingId) return
     setDeletingId(id)
     try {
-      await supabase
+      const { error } = await supabase
         .from('quick_presets')
         .delete()
         .eq('id', id)
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
+      if (error) {
+        setSaveError(error.message)
+        return
+      }
       onRefresh()
     } finally {
       setDeletingId(null)
@@ -84,7 +103,7 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontWeight: '600', fontSize: 14, color: c.textPrimary }}>
+              <Text style={{ fontWeight: '600', fontSize: 14, color: c.selectedText }}>
                 {preset.label}
               </Text>
               <Text style={{ fontSize: 13, color: c.textMuted }}>
@@ -104,8 +123,8 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
               }}
             >
               {deletingId === preset.id
-                ? <ActivityIndicator size="small" color="#94A8BA" />
-                : <Text style={{ fontSize: 11, color: '#94A8BA' }}>✕</Text>
+                ? <ActivityIndicator size="small" color={c.textMuted} />
+                : <Text style={{ fontSize: 11, color: c.textMuted }}>✕</Text>
               }
             </TouchableOpacity>
           </View>
@@ -122,9 +141,7 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
                 onChangeText={setLabel}
                 placeholder="e.g. Contigo"
                 placeholderTextColor="#94A8BA"
-                style={{
-                  ...inputBase, color: c.textPrimary, backgroundColor: c.inputBg
-                }}
+                style={{ ...inputBase, color: c.textPrimary, backgroundColor: c.inputBg }}
               />
             </View>
             <View style={{ width: 100 }}>
@@ -135,12 +152,15 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
                 placeholder="591"
                 placeholderTextColor="#94A8BA"
                 keyboardType="numeric"
-                style={{
-                  ...inputBase, color: c.textPrimary, backgroundColor: c.inputBg
-                }}
+                style={{ ...inputBase, color: c.textPrimary, backgroundColor: c.inputBg }}
               />
             </View>
           </View>
+
+          {saveError && (
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#D95F5F' }}>{saveError}</Text>
+          )}
+
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TouchableOpacity
               onPress={handleAdd}
@@ -157,14 +177,14 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
               }
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => { setAdding(false); setLabel(''); setAmount('') }}
+              onPress={resetForm}
               disabled={saving}
               style={{
-                flex: 1, borderWidth: 2, borderColor: '#DDE8F0', borderRadius: 12,
+                flex: 1, borderWidth: 2, borderColor: c.border, borderRadius: 12,
                 paddingVertical: 12, alignItems: 'center',
               }}
             >
-              <Text style={{ fontWeight: '600', fontSize: 14, color: '#94A8BA' }}>Cancel</Text>
+              <Text style={{ fontWeight: '600', fontSize: 14, color: c.textMuted }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -172,7 +192,9 @@ export default function PresetsManager({ presets, onRefresh }: PresetsManagerPro
         <TouchableOpacity
           onPress={() => setAdding(true)}
           style={{
-            borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12, paddingVertical: 12, alignItems: 'center',backgroundColor: c.card,
+            borderWidth: 2, borderColor: '#0D4F78', borderRadius: 12,
+            paddingVertical: 12, alignItems: 'center',
+            backgroundColor: c.card,
           }}
         >
           <Text style={{ fontWeight: '600', fontSize: 14, color: '#0D4F78' }}>+ Add container</Text>

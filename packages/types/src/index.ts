@@ -23,6 +23,7 @@ export interface UserProfile {
   reminder_enabled?: boolean
   reminder_interval_hours?: number
   created_at?: string
+  onboarding_completed: boolean
 }
 
 export interface DailySummary {

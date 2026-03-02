@@ -1,30 +1,49 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import AuthHeader from '@/components/ui/AuthHeader'
 import AuthBanner from '@/components/ui/AuthBanner'
+import { useThemeColors } from '@/lib/hooks/useThemeColors'
+import { TOKEN_TIMEOUT_MS, MIN_PASSWORD_LENGTH } from '@guater/utils'
 
 export default function ResetPasswordScreen() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false)
   const [tokenError, setTokenError] = useState(false)
 
+  const recoveryReceived = useRef(false)
+  const c = useThemeColors()
+
+  const inputStyle = {
+    borderWidth: 2,
+    borderColor: '#0D4F78',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingRight: 64,
+    fontSize: 14,
+    color: c.textPrimary,
+    backgroundColor: c.inputBg,
+  }
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
+        recoveryReceived.current = true
         setReady(true)
       }
     })
 
     const timeout = setTimeout(() => {
-      if (!ready) setTokenError(true)
-    }, 8000)
+      if (!recoveryReceived.current) setTokenError(true)
+    }, TOKEN_TIMEOUT_MS)
 
     return () => {
       subscription.unsubscribe()
@@ -37,10 +56,12 @@ export default function ResetPasswordScreen() {
       setError('Please fill in both fields.')
       return
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
       return
     }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match.')
       return
@@ -51,12 +72,10 @@ export default function ResetPasswordScreen() {
 
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password })
-
       if (updateError) {
         setError(updateError.message)
         return
       }
-
       await supabase.auth.signOut({ scope: 'global' })
       router.replace('/(auth)/login')
     } finally {
@@ -122,17 +141,7 @@ export default function ResetPasswordScreen() {
               placeholderTextColor="#94A8BA"
               autoCapitalize="none"
               returnKeyType="next"
-              style={{
-                borderWidth: 2,
-                borderColor: '#0D4F78',
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 12,
-                paddingRight: 64,
-                fontSize: 14,
-                color: '#0F2A3A',
-                backgroundColor: '#ffffff',
-              }}
+              style={inputStyle}
             />
             <TouchableOpacity
               onPress={() => setShowPassword(v => !v)}
@@ -145,7 +154,7 @@ export default function ResetPasswordScreen() {
             </TouchableOpacity>
           </View>
           <Text className="text-xs text-text-muted dark:text-dark-text-muted mt-1">
-            Minimum 6 characters
+            Minimum {MIN_PASSWORD_LENGTH} characters
           </Text>
         </View>
 
@@ -158,37 +167,26 @@ export default function ResetPasswordScreen() {
             <TextInput
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              secureTextEntry={!showPassword}
+              secureTextEntry={!showConfirm}
               placeholder="••••••••"
               placeholderTextColor="#94A8BA"
               autoCapitalize="none"
               returnKeyType="done"
               onSubmitEditing={handleSubmit}
-              style={{
-                borderWidth: 2,
-                borderColor: '#0D4F78',
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 12,
-                paddingRight: 64,
-                fontSize: 14,
-                color: '#0F2A3A',
-                backgroundColor: '#ffffff',
-              }}
+              style={inputStyle}
             />
             <TouchableOpacity
-              onPress={() => setShowPassword(v => !v)}
-              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+              onPress={() => setShowConfirm(v => !v)}
+              accessibilityLabel={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
               style={{ position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center' }}
             >
               <Text style={{ fontSize: 12, fontWeight: '600', color: '#94A8BA' }}>
-                {showPassword ? 'Hide' : 'Show'}
+                {showConfirm ? 'Hide' : 'Show'}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Submit */}
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={loading}

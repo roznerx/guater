@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { supabase } from './supabase'
 import { getTodayRange } from '@guater/utils'
+import { supabase } from '../supabase'
 
 export function useStreak(userId: string | undefined, goal: number, timezone: string) {
   const [streak, setStreak] = useState(0)

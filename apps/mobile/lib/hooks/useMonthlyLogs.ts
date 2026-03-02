@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { supabase } from './supabase'
 import type { WaterLog } from '@guater/types'
+import { supabase } from '../supabase'
 
 export function useMonthlyLogs(userId: string | undefined, timezone: string, refreshKey: number = 0) {
   const [logs, setLogs] = useState<WaterLog[]>([])

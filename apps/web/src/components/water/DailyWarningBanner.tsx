@@ -10,7 +10,7 @@ export default function DailyWarningBanner({ consumed }: DailyWarningBannerProps
   return (
     <div
       role="alert"
-      className="border-2 border-warning bg-white dark:bg-dark-card rounded-xl px-4 py-3 shadow-[3px_3px_0_#E8A230] flex items-start gap-3"
+      className="border-2 border-status-warning bg-white dark:bg-dark-card rounded-xl px-4 py-3 shadow-[3px_3px_0_#E8A230] flex items-start gap-3"
     >
       <span aria-hidden="true" className="text-lg flex-shrink-0">⚠️</span>
       <div>
