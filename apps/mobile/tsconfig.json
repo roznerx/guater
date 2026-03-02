@@ -4,9 +4,9 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@guater/types": ["../../packages/types/src/index.ts"],
+      "@guater/utils": ["../../packages/utils/src/index.ts"]
     }
   },
   "include": [

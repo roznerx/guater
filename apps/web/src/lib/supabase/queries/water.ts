@@ -1,7 +1,8 @@
 import { unstable_cache } from 'next/cache'
 import type { WaterLog } from '@guater/types'
 import { getAuthenticatedClient } from './auth'
-import { getTodayRangeForTimezone, getTimezoneOffset } from '@/lib/utils'
+import { getTodayRange } from '@guater/utils'
+import { getTimezoneOffset } from '@/lib/utils'
 
 export async function getTodayLogs(timezone: string, dayOffset = 0): Promise<WaterLog[]> {
   const auth = await getAuthenticatedClient()
@@ -10,7 +11,7 @@ export async function getTodayLogs(timezone: string, dayOffset = 0): Promise<Wat
 
   return unstable_cache(
     async () => {
-      const { start, end } = getTodayRangeForTimezone(timezone, dayOffset)
+      const { start, end } = getTodayRange(timezone, dayOffset)
       const { data, error } = await supabase
         .from('water_logs')
         .select('*')
@@ -51,14 +52,13 @@ export async function getWeeklyLogs(timezone: string): Promise<WaterLog[]> {
 }
 
 export async function getMonthlyLogs(
-  timezone: string
+  timezone: string,
+  start: Date,
+  end: Date
 ): Promise<Pick<WaterLog, 'logged_at' | 'amount_ml'>[]> {
   const auth = await getAuthenticatedClient()
   if (!auth) return []
   const { supabase, userId } = auth
-
-  const { start: todayStart } = getTodayRangeForTimezone(timezone)
-  const start = new Date(new Date(todayStart).getTime() - 29 * 24 * 60 * 60 * 1000)
 
   return unstable_cache(
     async () => {
@@ -66,11 +66,12 @@ export async function getMonthlyLogs(
         .from('water_logs')
         .select('logged_at, amount_ml')
         .gte('logged_at', start.toISOString())
+        .lte('logged_at', end.toISOString())
         .order('logged_at', { ascending: true })
       if (error) return []
       return data
     },
-    [`monthly-${userId}-${timezone}`],
+    [`monthly-${userId}-${timezone}-${start.toISOString().slice(0, 7)}`],
     { tags: [`logs-${userId}`], revalidate: 300 }
   )()
 }

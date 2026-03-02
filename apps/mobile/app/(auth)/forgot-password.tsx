@@ -1,25 +1,45 @@
 import { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { Link } from 'expo-router'
 import { supabase } from '@/lib/supabase'
+import AuthHeader from '@/components/ui/AuthHeader'
+import AuthBanner from '@/components/ui/AuthBanner'
+import Input from '@/components/ui/Input'
+import { EMAIL_REGEX } from '@guater/utils'
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
+  const [sent, setSent] = useState(false)
 
   async function handleReset() {
-    if (!email) return
+    const trimmed = email.trim()
+    if (!trimmed) {
+      setError('Please enter your email.')
+      return
+    }
+    if (!EMAIL_REGEX.test(trimmed)) {
+      setError('Please enter a valid email address.')
+      return
+    }
     setLoading(true)
     setError(null)
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
-
-    if (error) setError(error.message)
-    else setMessage('Check your email for a password reset link.')
-    setLoading(false)
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: 'guater://reset-password',
+      })
+      if (resetError) {
+        setError(resetError.message)
+      } else {
+        setSent(true)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
+
+  const isDisabled = loading || sent
 
   return (
     <KeyboardAvoidingView
@@ -27,51 +47,39 @@ export default function ForgotPasswordScreen() {
       className="flex-1 bg-surface dark:bg-dark-surface"
     >
       <View className="flex-1 justify-center px-6">
+        <AuthHeader subtitle="Reset your password" />
 
-        <Text className="text-4xl font-bold text-blue-deep dark:text-blue-light mb-2">
-          Güater
-        </Text>
-        <Text className="text-base text-text-muted dark:text-dark-text-muted mb-10">
-          Reset your password
-        </Text>
-
-        {error && (
-          <View className="bg-white dark:bg-dark-card border-2 border-status-error rounded-xl px-4 py-3 mb-4">
-            <Text className="text-status-error text-sm">{error}</Text>
-          </View>
-        )}
-
-        {message && (
-          <View className="bg-white dark:bg-dark-card border-2 border-teal-core rounded-xl px-4 py-3 mb-4">
-            <Text className="text-teal-deep text-sm">{message}</Text>
-          </View>
+        {error && <AuthBanner message={error} type="error" />}
+        {sent && (
+          <AuthBanner message="Check your email for a password reset link." type="success" />
         )}
 
         <View className="flex flex-col gap-4">
-          <View>
-            <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1.5">
-              Email
-            </Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              placeholderTextColor="#94A8BA"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              className="border-2 border-blue-deep rounded-xl px-3 py-3 text-sm text-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-card"
-            />
-          </View>
+          <Input
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={handleReset}
+            editable={!sent}
+          />
 
           <TouchableOpacity
             onPress={handleReset}
-            disabled={loading}
+            disabled={isDisabled}
+            style={{ opacity: isDisabled ? 0.5 : 1 }}
             className="bg-blue-deep rounded-xl py-3.5 items-center mt-2"
           >
             {loading
               ? <ActivityIndicator color="white" />
-              : <Text className="text-white font-semibold text-base">Send reset link</Text>
+              : <Text className="text-white font-semibold text-base">
+                  {sent ? 'Email sent' : 'Send reset link'}
+                </Text>
             }
           </TouchableOpacity>
         </View>
@@ -79,7 +87,6 @@ export default function ForgotPasswordScreen() {
         <Link href="/(auth)/login" className="mt-6 text-center text-sm text-blue-core font-semibold">
           Back to login
         </Link>
-
       </View>
     </KeyboardAvoidingView>
   )

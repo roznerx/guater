@@ -1,17 +1,21 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { useTheme } from '@/lib/context/ThemeContext'
 
 export default function TabsLayout() {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#0D4F78',
+        tabBarActiveTintColor:   isDark ? '#7FB8D8' : '#0D4F78',
         tabBarInactiveTintColor: '#94A8BA',
         tabBarStyle: {
-          borderTopWidth: 2,
-          borderTopColor: '#DDE8F0',
-          backgroundColor: '#ffffff',
+          borderTopWidth:    2,
+          borderTopColor:    isDark ? '#1E3448' : '#DDE8F0',
+          backgroundColor:   isDark ? '#152433' : '#ffffff',
         },
       }}
     >
@@ -38,7 +42,7 @@ export default function TabsLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" size={size} color={color} />
+            <Ionicons name="settings-sharp" size={size} color={color} />
           ),
         }}
       />

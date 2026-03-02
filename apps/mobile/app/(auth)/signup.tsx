@@ -1,26 +1,51 @@
 import { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { Link } from 'expo-router'
 import { supabase } from '@/lib/supabase'
+import AuthHeader from '@/components/ui/AuthHeader'
+import AuthBanner from '@/components/ui/AuthBanner'
+import Input from '@/components/ui/Input'
+import { EMAIL_REGEX, MIN_PASSWORD_LENGTH } from '@guater/utils'
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
+  const [sent, setSent] = useState(false)
 
   async function handleSignup() {
-    if (!email || !password) return
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail || !password) {
+      setError('Please enter your email and password.')
+      return
+    }
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setError('Please enter a valid email address.')
+      return
+    }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
+      return
+    }
     setLoading(true)
     setError(null)
-
-    const { error } = await supabase.auth.signUp({ email, password })
-
-    if (error) setError(error.message)
-    else setMessage('Check your email to confirm your account.')
-    setLoading(false)
+    try {
+      const { error: authError } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
+      })
+      if (authError) {
+        setError(authError.message)
+      } else {
+        setSent(true)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
+
+  const isDisabled = loading || sent
 
   return (
     <KeyboardAvoidingView
@@ -28,66 +53,51 @@ export default function SignupScreen() {
       className="flex-1 bg-surface dark:bg-dark-surface"
     >
       <View className="flex-1 justify-center px-6">
+        <AuthHeader subtitle="Create your account" />
 
-        <Text className="text-4xl font-bold text-blue-deep dark:text-blue-light mb-2">
-          Güater
-        </Text>
-        <Text className="text-base text-text-muted dark:text-dark-text-muted mb-10">
-          Create your account
-        </Text>
-
-        {error && (
-          <View className="bg-white dark:bg-dark-card border-2 border-status-error rounded-xl px-4 py-3 mb-4">
-            <Text className="text-status-error text-sm">{error}</Text>
-          </View>
-        )}
-
-        {message && (
-          <View className="bg-white dark:bg-dark-card border-2 border-teal-core rounded-xl px-4 py-3 mb-4">
-            <Text className="text-teal-deep text-sm">{message}</Text>
-          </View>
+        {error && <AuthBanner message={error} type="error" />}
+        {sent && (
+          <AuthBanner message="Check your email to confirm your account." type="success" />
         )}
 
         <View className="flex flex-col gap-4">
-          <View>
-            <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1.5">
-              Email
-            </Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              placeholderTextColor="#94A8BA"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              className="border-2 border-blue-deep rounded-xl px-3 py-3 text-sm text-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-card"
-            />
-          </View>
+          <Input
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            autoFocus
+            returnKeyType="next"
+            editable={!sent}
+          />
 
-          <View>
-            <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary mb-1.5">
-              Password
-            </Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              placeholderTextColor="#94A8BA"
-              secureTextEntry
-              autoComplete="password"
-              className="border-2 border-blue-deep rounded-xl px-3 py-3 text-sm text-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-card"
-            />
-          </View>
+          <Input
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="••••••••"
+            secureTextEntry
+            autoComplete="password"
+            returnKeyType="done"
+            onSubmitEditing={handleSignup}
+            hint={`Minimum ${MIN_PASSWORD_LENGTH} characters`}
+            editable={!sent}
+          />
 
           <TouchableOpacity
             onPress={handleSignup}
-            disabled={loading}
+            disabled={isDisabled}
+            style={{ opacity: isDisabled ? 0.5 : 1 }}
             className="bg-blue-deep rounded-xl py-3.5 items-center mt-2"
           >
             {loading
               ? <ActivityIndicator color="white" />
-              : <Text className="text-white font-semibold text-base">Sign up</Text>
+              : <Text className="text-white font-semibold text-base">
+                  {sent ? 'Email sent' : 'Sign up'}
+                </Text>
             }
           </TouchableOpacity>
         </View>
@@ -96,7 +106,6 @@ export default function SignupScreen() {
           Already have an account?{' '}
           <Text className="text-blue-core font-semibold">Log in</Text>
         </Link>
-
       </View>
     </KeyboardAvoidingView>
   )

@@ -40,13 +40,13 @@ export default function PresetsManager({ presets }: PresetsManagerProps) {
 
   return (
     <div>
-      <div className="text-xs font-semibold uppercase tracking-widest text-text-muted mb-3">
+      <div className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted mb-3">
         Quick add containers
       </div>
 
       <div className="flex flex-col gap-2 mb-4">
         {presets.length === 0 && (
-          <p className="text-sm text-text-muted">
+          <p className="text-sm text-text-muted dark:text-dark-text-muted">
             No containers yet. Add one below.
           </p>
         )}
@@ -56,20 +56,19 @@ export default function PresetsManager({ presets }: PresetsManagerProps) {
             className="flex justify-between items-center px-4 py-3 rounded-xl border-2 border-border dark:border-dark-border bg-surface dark:bg-dark-surface"
           >
             <div>
-              <span className="font-semibold text-text-primary dark:text-dark-text-primary">
+              <span className="text-xs font-semibold text-text-primary dark:text-blue-light text-center leading-tight">
                 {preset.label}
               </span>
               <span className="text-sm text-text-muted dark:text-dark-text-muted ml-2">
                 {preset.amount_ml} ml
               </span>
             </div>
-
             <button
               type="button"
               onClick={() => handleDelete(preset.id)}
               disabled={deletingId === preset.id}
               aria-label={`Delete ${preset.label}`}
-              className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-6 h-6 rounded-md border-2 border-border dark:border-dark-border bg-white dark:bg-dark-card text-text-muted dark:text-dark-text-muted text-xs hover:border-status-error hover:text-status-error transition-colors flex items-center justify-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
               ✕
             </button>

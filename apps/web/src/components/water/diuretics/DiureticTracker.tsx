@@ -71,7 +71,7 @@ export default function DiureticTracker({ logs, presets }: DiureticTrackerProps)
             <div className="h-12 flex items-end justify-center">
               <MinBottle label={preset.label} color={preset.color} />
             </div>
-            <span className="text-xs font-semibold text-text-primary dark:text-dark-text-primary text-center leading-tight">
+            <span className="text-xs font-semibold text-text-primary dark:text-blue-light text-center leading-tight">
               {preset.label}
             </span>
             <span className="text-xs text-status-error font-medium">

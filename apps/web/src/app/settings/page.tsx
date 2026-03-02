@@ -8,6 +8,7 @@ import { getProfile } from '@/lib/supabase/queries/profile'
 import { getPresets } from '@/lib/supabase/queries/presets'
 import { getDiureticPresets } from '@/lib/supabase/queries/diuretics'
 import { logout } from '@/app/actions/logout'
+import DeleteAccountButton from '@/components/ui/DeleteAccountButton'
 
 export default async function SettingsPage() {
   const [profile, presets, diureticPresets] = await Promise.all([
@@ -43,11 +44,14 @@ export default async function SettingsPage() {
           <div className="text-xs font-semibold uppercase tracking-widest text-text-muted dark:text-dark-text-muted mb-4">
             Account
           </div>
-          <form action={logout}>
-            <Button variant="ghost" type="submit" fullWidth>
-              Log out
-            </Button>
-          </form>
+          <div className="flex flex-col gap-3">
+            <form action={logout}>
+              <Button variant="ghost" type="submit" fullWidth>
+                Log out
+              </Button>
+            </form>
+            <DeleteAccountButton />
+          </div>
         </Card>
       </main>
     </div>
